@@ -1,0 +1,18 @@
+note: "Humanoid robot with SMPL body model."
+humanoid_type: smpl
+has_upright_start: False
+has_shape_obs: False
+has_weight_obs: False
+has_shape_variation: False
+has_mesh: False
+replace_feet: True
+has_jt_limit: False
+height_fix_mode: full
+big_ankle: True
+remove_toe: False
+real_weight_porpotion_capsules: True
+real_weight_porpotion_boxes: True
+real_weight: True
+box_body: True
+smpl_data_dir: data/smpl
+create_vel_sensors: False

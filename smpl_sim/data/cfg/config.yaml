@@ -1,0 +1,25 @@
+defaults:
+  - _self_
+  - env: base_env
+  - robot: smpl_humanoid
+  - learning: simple_mlp
+
+notes: "Default Notes"
+exp_name: &exp_name humanoid_smpl
+headless: True
+seed: 0
+no_log: False
+resume_str: null
+num_threads: 36
+test: False 
+output_dir: outputs/${exp_name}
+epoch: 0
+
+hydra:
+  job:
+    name: ${exp_name}
+    env_set:
+      OMP_NUM_THREADS: 1
+  run:
+    dir: outputs/${exp_name}
+

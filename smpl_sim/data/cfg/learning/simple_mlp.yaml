@@ -1,0 +1,34 @@
+agent_name: "agent_humanoid"
+max_epoch: 100000000
+actor_type: "gauss"
+opt_num_epochs: 10
+min_batch_size: 51200
+policy_grad_clip: 25
+
+save_curr_frequency: 50
+save_frequency: 1500
+
+fix_std: True
+log_std: -2.5
+gamma: 0.99
+tau: 0.95
+clip_epsilon: 0.2
+clip_obs: True
+clip_obs_range: [-5.0, 5.0]
+
+
+policy_optimizer: "adam"
+policy_weightdecay: 0.0
+policy_lr: 5.e-5
+value_optimizer: "adam"
+value_weightdecay: 0.0
+value_lr: 3.e-4
+
+mlp:
+  units: [2048, 1536, 1024, 1024, 512, 512] # comparable paramter to z_big_task
+  activation: silu
+
+  initializer:
+    name: default
+  regularizer:
+    name: None

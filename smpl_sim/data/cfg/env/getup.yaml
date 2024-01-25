@@ -1,0 +1,28 @@
+task: HumanoidGetup
+note: this is the default config file for the getup task
+episode_length: 300
+sim_timestep_inv: 450
+control_frequency_inv: 15
+power_scale: 10
+root_height_obs: true
+enable_early_termination: True
+self_obs_v: 1
+kp_scale: 1.0
+kd_scale: 1.0
+cycle_motion: False
+power_reward: True
+clip_actions: True
+control_mode: "uhc_pd"
+render_mode: "human"
+camera: "side"
+state_init: Fall
+pdp_scale: 1
+pdd_scale: 1
+pdi_scale: 1
+
+recovery_steps: 60
+tar_height_min: 0.5
+tar_height_max: 1.2
+height_change_steps_min: 100
+height_change_steps_max: 200
+contact_bodies: ["R_Ankle", "L_Ankle", "R_Toe", "L_Toe"]
