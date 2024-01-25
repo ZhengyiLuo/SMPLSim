@@ -277,7 +277,7 @@ class Skeleton:
                 bone.end = sum([bone_c.pos for bone_c in bone.child]) / len(bone.child)
                 
     def construct_tree(self,
-            template_fname=files('mj_smpl').joinpath('data/assets/mjcf/humanoid_template_local.xml'),
+            template_fname=files('smpl_sim').joinpath('data/assets/mjcf/humanoid_template_local.xml'),
             offset=np.array([0, 0, 0]),
             ref_angles=None,
             bump_buffer=False):
@@ -342,7 +342,7 @@ class Skeleton:
     def write_xml(
             self,
             fname,
-            template_fname=files('mj_smpl').joinpath('data/assets/mjcf/humanoid_template_local.xml'),
+            template_fname=files('smpl_sim').joinpath('data/assets/mjcf/humanoid_template_local.xml'),
             offset=np.array([0, 0, 0]),
             ref_angles=None,
             bump_buffer=False,
@@ -353,7 +353,7 @@ class Skeleton:
 
     def write_str(
             self,
-            template_fname=files('mj_smpl').joinpath('data/assets/mjcf/humanoid_template_local.xml'),
+            template_fname=files('smpl_sim').joinpath('data/assets/mjcf/humanoid_template_local.xml'),
             offset=np.array([0, 0, 0]),
             ref_angles=None,
             bump_buffer=False,

@@ -31,7 +31,7 @@ import torch
 from easydict import EasyDict
 from smpl_sim.smpllib.motion_lib_base import FixHeightMode
 
-@hydra.main(version_base=None, config_path=str(files('mj_smpl').joinpath('data/cfg')), config_name="config")
+@hydra.main(version_base=None, config_path=str(files('smpl_sim').joinpath('data/cfg')), config_name="config")
 def main(cfg : DictConfig) -> None:
     # motions = joblib.load("sample_data/amass_isaac_standing_upright_slim.pkl")
     device = torch.device("cpu")

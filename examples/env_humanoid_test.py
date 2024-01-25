@@ -16,7 +16,7 @@ import imageio
 import mujoco
 print(f"mujoco.__version__: {mujoco.__version__}")
 ### SMPL
-# from mj_smpl.envs.humanoid_env import HumanoidEnv
+# from smpl_sim.envs.humanoid_env import HumanoidEnv
 import yaml
 try:
     # Python < 3.9
@@ -28,7 +28,7 @@ from omegaconf import DictConfig, OmegaConf
 import mediapy as media
 from smpl_sim.envs.tasks import *
 
-@hydra.main(version_base=None, config_path=str(files('mj_smpl').joinpath('data/cfg')), config_name="config")
+@hydra.main(version_base=None, config_path=str(files('smpl_sim').joinpath('data/cfg')), config_name="config")
 def main(cfg : DictConfig) -> None:
     motions = joblib.load("sample_data/amass_isaac_standing_upright_slim.pkl")
     print(f"number of motions: {len(motions)}")

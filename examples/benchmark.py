@@ -9,7 +9,7 @@ import numpy as np
 ### Mujoco-related imports
 import mujoco
 ### SMPL
-# from mj_smpl.envs.humanoid_env import HumanoidEnv
+# from smpl_sim.envs.humanoid_env import HumanoidEnv
 from omegaconf import OmegaConf
 import gymnasium as gym
 from tqdm import tqdm

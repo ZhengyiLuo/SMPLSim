@@ -30,7 +30,7 @@ import hydra
 
 @hydra.main(
     version_base=None,
-    config_path=str(files("mj_smpl").joinpath("data/cfg")),
+    config_path=str(files("smpl_sim").joinpath("data/cfg")),
     config_name="config",
 )
 def main(cfg: DictConfig) -> None:

@@ -262,7 +262,7 @@ class Humanoid_Batch:
         
         
 
-@hydra.main(version_base=None, config_path=str(files('mj_smpl').joinpath('data/cfg')), config_name="config")
+@hydra.main(version_base=None, config_path=str(files('smpl_sim').joinpath('data/cfg')), config_name="config")
 def main(cfg : DictConfig) -> None:
     # motions = joblib.load("sample_data/amass_isaac_standing_upright_slim.pkl")
     cfg.robot.create_vel_sensors = True
@@ -360,7 +360,7 @@ def main(cfg : DictConfig) -> None:
     # assert(np.abs(return_dict_sim_np.qpos - qpos).sum() < 0.001)
     # assert(np.abs(return_dict_sim_np.qvel.squeeze().numpy()[:-1] - qvel[1:]).max() < 0.0001)
     
-    # import mj_smpl.utils.math_utils as mRot
+    # import smpl_sim.utils.math_utils as mRot
     # compute_qvel = [mRot.get_qvel_fd_new(qpos[idx], qpos[idx+1], humanoid.dt) for idx in range(N-1)] # UHC's qvel computation
     # compute_qvel = np.array(compute_qvel)
     # assert(np.abs((compute_qvel - qvel[1:])).max() < 0.01)
