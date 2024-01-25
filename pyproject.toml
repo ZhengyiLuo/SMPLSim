@@ -1,0 +1,58 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "mj_smpl"
+authors = [
+  { name="Example Author", email="author@example.com" },
+]
+description = "TODO"
+readme = "README.md"
+requires-python = ">=3.8"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+dynamic = ["version"]
+
+dependencies = [
+  'mujoco>=3',
+  'lxml',
+  'vtk',
+  'mediapy',
+  'joblib',
+  'numpy>1.16.1',
+  'scipy',
+  'smplx@git+https://github.com/ZhengyiLuo/smplx.git@master',
+  'numpy-stl',
+  'torchgeometry',
+  'opencv-python',
+  'chumpy',
+  'imageio',
+  'gymnasium>=0.29.1',
+  'hydra-core>=1.3',
+  'tqdm',
+  "importlib-resources==3.0.0;python_version<'3.9'"
+]
+
+[project.optional-dependencies]
+dm_control = [
+  'dm_control',
+  'dm-env'
+]
+
+isaac = [
+  'aiohttp',
+  'scikit-image',
+  'Pillow',
+  'pyvirtualdisplay',
+]
+
+tests = [
+  'pytest'
+]
+
+[tool.setuptools.dynamic]
+version = {attr = "mj_smpl.__version__"}
