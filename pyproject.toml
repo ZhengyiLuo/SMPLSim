@@ -3,7 +3,7 @@ requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "mj_smpl"
+name = "smpl_sim"
 authors = [
   { name="Example Author", email="author@example.com" },
 ]
@@ -55,4 +55,4 @@ tests = [
 ]
 
 [tool.setuptools.dynamic]
-version = {attr = "mj_smpl.__version__"}
+version = {attr = "smpl_sim.__version__"}

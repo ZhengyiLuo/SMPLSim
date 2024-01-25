@@ -1,3 +1,10 @@
+import glob
+import os
+import sys
+import pdb
+import os.path as osp
+sys.path.append(os.getcwd())
+
 import numpy as np
 from collections import OrderedDict
 import gymnasium as gym
@@ -14,7 +21,13 @@ from smpl_sim.smpllib.motion_lib_base import FixHeightMode
 import smpl_sim.utils.np_transform_utils as npt_utils
 import smpl_sim.utils.mujoco_utils as mj_utils
 
-
+try:
+    # Python < 3.9
+    from importlib_resources import files
+except ImportError:
+    from importlib.resources import files
+    
+    
 _AVAILABLE_CONTROLLERS = ["uhc_pd", "simple_pid", "pd", "torque"]
 
 
@@ -225,23 +238,23 @@ class HumanoidEnv(BaseEnv):
                 "geom_params": {},
                 "actuator_params": {},
             }
-            self.robot = SMPL_Robot(
-                robot_cfg,
-                data_dir=self._smpl_data_dir,
-            )
+            if os.path.exists(self._smpl_data_dir):
+                self.robot = SMPL_Robot(
+                    robot_cfg,
+                    data_dir=self._smpl_data_dir,
+                )
+                
+                self.default_xml_str = self.robot.export_xml_string().decode("utf-8")
+            else:
+                print("Missing SMPL Files!!!!! Using mean netural body ")
+                default_smpl_file = files('smpl_sim').joinpath('data/assets/mjcf/smpl_humanoid.xml')
+                with open(default_smpl_file, 'r') as file:
+                    self.default_xml_str = file.read()
+                self.robot = None
             
-            ##############################################################################################################################
-            # import torch
-            # betas = np.zeros((1, 16))
-            # betas[:, :10] = np.array([   2.5614,   2.0117,   0.2446,   2.0019,  13.2588,  -9.0563, -35.1541, 12.0772, -48.4349,  17.2191])
-            # self.robot.load_from_skeleton(betas=torch.from_numpy(betas))
-            ##############################################################################################################################
-            
-            self.default_xml_str = self.robot.export_xml_string().decode("utf-8")
             if self.render_mode == "rgb_array":
                 # this is temp fix for rendering without visualizer, should we add a camera directly in SMPL_robot
                 self.default_xml_str = smplxadd.smpl_add_camera(self.default_xml_str)
-            self.robot.write_xml("test.xml")
         else:
             raise NotImplementedError(f"humanoid_type: {self.humanoid_type}")
 
@@ -250,11 +263,14 @@ class HumanoidEnv(BaseEnv):
         for i in range(self.mj_model.nbody):  # the first one is always world
             body_name = self.mj_model.body(i).name
             self.mj_body_names.append(body_name)
-        self.body_names_orig = self.robot.joint_names
+        if self.robot is not None:
+            self.body_names_orig = self.robot.joint_names 
+        else:
+            self.body_names_orig = self.mj_body_names[1:] # making some assumptions about the xml file here. 
+            
         self.num_rigid_bodies = len(self.body_names_orig)
         self.num_vel_limit = self.num_rigid_bodies * 3
         self.dof_names = self.body_names_orig[1:] # first joint is not actuated.
-        # self.geom_names = self.robot.geom_names
         self.actuator_names = mj_utils.get_actuator_names(self.mj_model)
         self.body_qposaddr = mj_utils.get_body_qposaddr(self.mj_model)
         self.body_qveladdr = mj_utils.get_body_qveladdr(self.mj_model)

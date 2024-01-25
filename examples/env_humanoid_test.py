@@ -30,8 +30,6 @@ from smpl_sim.envs.tasks import *
 
 @hydra.main(version_base=None, config_path=str(files('smpl_sim').joinpath('data/cfg')), config_name="config")
 def main(cfg : DictConfig) -> None:
-    motions = joblib.load("sample_data/amass_isaac_standing_upright_slim.pkl")
-    print(f"number of motions: {len(motions)}")
     # env = HumanoidEnv(cfg)
     cfg.env.camera = "back"
     env = eval(cfg.env.task)(cfg)
@@ -42,7 +40,6 @@ def main(cfg : DictConfig) -> None:
     if cfg.env.render_mode == "rgb_array":
         max_T = 1
     frames = []
-    env.robot.write_xml("smpl_humanoid.xml")
     while True:
         action = np.zeros(env.mj_data.ctrl.shape[0]) 
         action[:] = 0
