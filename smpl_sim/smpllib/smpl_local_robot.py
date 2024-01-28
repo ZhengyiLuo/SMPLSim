@@ -1,9 +1,11 @@
+import glob
 import os
 import sys
+sys.path.append(os.getcwd())
+
 import time
 import argparse
 import torch
-import pdb
 import os.path as osp
 
 import numpy as np
@@ -2405,12 +2407,12 @@ if __name__ == "__main__":
         "remove_toe": False,
         "real_weight": True,
         "real_weight_porpotion_capsules": True,
-        "real_weight_porpotion_boxes": False,
+        "real_weight_porpotion_boxes": True,
         "replace_feet": True,
         "masterfoot": False,
         "big_ankle": True,
         "freeze_hand": False, 
-        "box_body": False,
+        "box_body": True,
         "master_range": 50,
         "model": "smpl",
         "body_params": {},
