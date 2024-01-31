@@ -45,6 +45,37 @@ GEOM_TYPES = {
     'R_Wrist': 'capsule',
     'R_Hand': 'sphere',
     # 'R_Hand': 'box',
+    
+    "L_Index1": 'capsule',
+    "L_Index2": 'capsule',
+    "L_Index3": 'capsule',
+    "L_Middle1": 'capsule',
+    "L_Middle2": 'capsule',
+    "L_Middle3": 'capsule',
+    "L_Pinky1": 'capsule',
+    "L_Pinky2": 'capsule',
+    "L_Pinky3": 'capsule',
+    "L_Ring1": 'capsule',
+    "L_Ring2": 'capsule',
+    "L_Ring3": 'capsule',
+    "L_Thumb1": 'capsule',
+    "L_Thumb2": 'capsule',
+    "L_Thumb3": 'capsule',
+    "R_Index1": 'capsule',
+    "R_Index2": 'capsule',
+    "R_Index3": 'capsule',
+    "R_Middle1": 'capsule',
+    "R_Middle2": 'capsule',
+    "R_Middle3": 'capsule',
+    "R_Pinky1": 'capsule',
+    "R_Pinky2": 'capsule',
+    "R_Pinky3": 'capsule',
+    "R_Ring1": 'capsule',
+    "R_Ring2": 'capsule',
+    "R_Ring3": 'capsule',
+    "R_Thumb1": 'capsule',
+    "R_Thumb2": 'capsule',
+    "R_Thumb3": 'capsule',
 }
 # KP KD gear max_torque
 # GAINS = {
@@ -151,6 +182,37 @@ GAINS = {
     "R_Elbow":          [150, 1, 1, 150, 10, 2],
     "R_Wrist":          [100, 1, 1, 150, 1, 1],
     "R_Hand":           [50, 1, 1, 150, 1, 1],
+    
+    "L_Index1": [100, 10, 1, 150],
+    "L_Index2": [100, 10, 1, 150],
+    "L_Index3": [100, 10, 1, 150],
+    "L_Middle1": [100, 10, 1, 150],
+    "L_Middle2": [100, 10, 1, 150],
+    "L_Middle3": [100, 10, 1, 150],
+    "L_Pinky1": [100, 10, 1, 150],
+    "L_Pinky2": [100, 10, 1, 150],
+    "L_Pinky3": [100, 10, 1, 150],
+    "L_Ring1": [100, 10, 1, 150],
+    "L_Ring2": [100, 10, 1, 150],
+    "L_Ring3": [100, 10, 1, 150],
+    "L_Thumb1": [100, 10, 1, 150],
+    "L_Thumb2": [100, 10, 1, 150],
+    "L_Thumb3": [100, 10, 1, 150],
+    "R_Index1": [100, 10, 1, 150],
+    "R_Index2": [100, 10, 1, 150],
+    "R_Index3": [100, 10, 1, 150],
+    "R_Middle1": [100, 10, 1, 150],
+    "R_Middle2": [100, 10, 1, 150],
+    "R_Middle3": [100, 10, 1, 150],
+    "R_Pinky1": [100, 10, 1, 150],
+    "R_Pinky2": [100, 10, 1, 150],
+    "R_Pinky3": [100, 10, 1, 150],
+    "R_Ring1": [100, 10, 1, 150],
+    "R_Ring2": [100, 10, 1, 150],
+    "R_Ring3": [100, 10, 1, 150],
+    "R_Thumb1": [100, 10, 1, 150],
+    "R_Thumb2": [100, 10, 1, 150],
+    "R_Thumb3": [100, 10, 1, 150],
 }
 
 
@@ -181,7 +243,7 @@ class Bone:
 
 class Skeleton:
 
-    def __init__(self):
+    def __init__(self, smpl_model = "smpl"):
         self.bones = []
         self.name2bone = {}
         self.mass_scale = 1.0
@@ -189,6 +251,7 @@ class Skeleton:
         self.dof_name = ["x", "y", "z"]
         self.root = None
         self.exclude_contacts = []
+        self.smpl_model = smpl_model
 
     def forward_bvh(self, bone):
         bone.pos = bone.offset
@@ -429,6 +492,10 @@ class Skeleton:
         if self.box_body:
             GEOM_TYPES['Head'] = 'box'
             GEOM_TYPES['Pelvis'] = 'box'
+            
+        if self.smpl_model == "smplx":
+            GEOM_TYPES['L_Wrist'] = 'box' 
+            GEOM_TYPES['R_Wrist'] = 'box'
         
         g_attr["type"] = GEOM_TYPES[bone.name]
         g_attr["contype"] = "1"
@@ -552,6 +619,15 @@ class Skeleton:
                 else:
                     size[0] /= 1.5  # ZL Hack: shrinkage
                     size[2] /= 1.5  # ZL Hack: shrinkage
+            if self.smpl_model == "smplx" and (bone.name == "L_Wrist" or bone.name == "R_Wrist"):
+                if self.upright_start:
+                    size[0] /= 1.15  # ZL Hack: shrinkage
+                    size[1] /= 1.3  # ZL Hack: shrinkage
+                    size[2] /= 1.7  # ZL Hack: shrinkage
+                else:
+                    size[0] /= 1.15  # ZL Hack: shrinkage
+                    size[1] /= 1.3  # ZL Hack: shrinkage
+                    size[1] /= 1.7  # ZL Hack: shrinkage
                 
                 
             if self.real_weight_porpotion_boxes:

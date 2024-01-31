@@ -615,64 +615,98 @@ class SMPLX_Parser(_SMPLX):
         joints = smpl_output.joints
         #         return vertices, joints
         return vertices, joints
-    
-     
 
-    def get_offsets(self, v_template=None, zero_pose=None, betas=torch.zeros(1, 26).float()):
+
+    def get_offsets(self, v_template=None, zero_pose=None, betas=None, flatfoot=False):
         if not v_template is None:
             self.v_template = v_template
         with torch.no_grad():
+            joint_names = SMPLX_BONE_ORDER_NAMES
             if zero_pose is None:
                 verts, Jtr = self.get_joints_verts(self.zero_pose, th_betas=betas)
             else:
                 verts, Jtr = self.get_joints_verts(zero_pose, th_betas=betas)
-            verts_np = verts.detach().cpu().numpy()
+                
             jts_np = Jtr.detach().cpu().numpy()
-            parents = self.parents.cpu().numpy()
-            offsets_smpl = [np.array([0, 0, 0])]
-            for i in range(1, len(parents)):
-                p_id = parents[i]
-                p3d = jts_np[0, p_id]
-                curr_3d = jts_np[0, i]
-                offset_curr = curr_3d - p3d
-                offsets_smpl.append(offset_curr)
-            offsets_smpl = np.array(offsets_smpl)
-            joint_names = self.joint_names
-            joint_pos = Jtr[0].numpy()
-            smpl_joint_parents = self.parents.cpu().numpy()
-            joint_offsets = {joint_names[c]: (joint_pos[c] - joint_pos[p]) if c > 0 else joint_pos[c] for c, p in enumerate(smpl_joint_parents)}
-            parents_dict = {joint_names[i]: joint_names[parents[i]] for i in range(len(joint_names))}
-            channels = ["z", "y", "x"]
-            skin_weights = self.lbs_weights.numpy()
-            return (verts[0], jts_np[0], skin_weights, self.joint_names, joint_offsets, parents_dict, channels, self.joint_range)
 
-    def get_mesh_offsets(self, v_template=None):
+            smpl_joint_parents = self.parents.cpu().numpy()
+            joint_pick_idx = [SMPLX_BONE_ORDER_NAMES.index(i) for i in SMPLH_BONE_ORDER_NAMES]
+            joint_pos = Jtr[0].numpy()
+            joint_offsets = {joint_names[c]: (joint_pos[c] - joint_pos[p]) if c > 0 else joint_pos[c] for c, p in enumerate(smpl_joint_parents) if joint_names[c] in self.joint_names}
+            parents_dict = {x: joint_names[i] if i >= 0 else None for x, i in zip(joint_names, smpl_joint_parents) if joint_names[i] in self.joint_names and x in self.joint_names}
+            joint_pos = joint_pos[joint_pick_idx]
+
+            #  (SMPLX_BONE_ORDER_NAMES[:22] + SMPLX_BONE_ORDER_NAMES[25:55]) == SMPLH_BONE_ORDER_NAMES # ZL Hack: only use the weights we need. 
+            skin_weights = self.lbs_weights.numpy()[:, self.parents_to_use]
+            skin_weights.argmax(axis=1)
+            
+            channels = ["z", "y", "x"]
+            return  (verts[0], jts_np[0], skin_weights, self.joint_names, joint_offsets, parents_dict, channels, self.joint_range)
+
+
+                
+    def get_mesh_offsets(self, v_template=None, zero_pose=None, betas=None, flatfoot=False):
         if not v_template is None:
             self.v_template = v_template
         with torch.no_grad():
-            #             joint_names = self.joint_names
             joint_names = SMPLX_BONE_ORDER_NAMES
-            verts, Jtr = self.get_joints_verts(self.zero_pose)
+            if zero_pose is None:
+                verts, Jtr = self.get_joints_verts(self.zero_pose, th_betas=betas)
+            else:
+                verts, Jtr = self.get_joints_verts(zero_pose, th_betas=betas)
+            
 
             smpl_joint_parents = self.parents.cpu().numpy()
+            joint_pick_idx = [SMPLX_BONE_ORDER_NAMES.index(i) for i in SMPLH_BONE_ORDER_NAMES]
             joint_pos = Jtr[0].numpy()
-            # print(
-            #     joint_pos.shape,
-            #     smpl_joint_parents.shape,
-            #     len(self.parents_to_use),
-            #     self.parents.cpu().numpy().shape,
-            # )
             joint_offsets = {joint_names[c]: (joint_pos[c] - joint_pos[p]) if c > 0 else joint_pos[c] for c, p in enumerate(smpl_joint_parents) if joint_names[c] in self.joint_names}
-            joint_parents = {x: joint_names[i] if i >= 0 else None for x, i in zip(joint_names, smpl_joint_parents) if joint_names[i] in self.joint_names}
-
+            joint_parents = {x: joint_names[i] if i >= 0 else None for x, i in zip(joint_names, smpl_joint_parents) if joint_names[i] in self.joint_names and x in self.joint_names}
+            joint_pos = joint_pos[joint_pick_idx]
             verts = verts[0].numpy()
-            # skin_weights = smpl_layer.th_weights.numpy()
+            #  (SMPLX_BONE_ORDER_NAMES[:22] + SMPLX_BONE_ORDER_NAMES[25:55]) == SMPLH_BONE_ORDER_NAMES # ZL Hack: only use the weights we need. 
             skin_weights = self.lbs_weights.numpy()[:, self.parents_to_use]
+            skin_weights.argmax(axis=1)
+
             return (
                 verts,
                 joint_pos,
                 skin_weights,
                 self.joint_names,
+                joint_offsets,
+                joint_parents,
+                self.joint_axes,
+                self.joint_dofs,
+                self.joint_range,
+                self.contype,
+                self.conaffinity,
+            )
+            
+    def get_mesh_offsets_batch(self, betas=torch.zeros(1, 10), flatfoot=False):
+        with torch.no_grad():
+            joint_names = SMPLX_BONE_ORDER_NAMES
+            verts, Jtr = self.get_joints_verts(self.zero_pose.repeat(betas.shape[0], 1), th_betas=betas)
+            verts_np = verts.detach().cpu().numpy()
+            verts = verts_np[0]
+
+            if flatfoot:
+                feet_subset = verts[:, 1] < np.min(verts[:, 1]) + 0.01
+                verts[feet_subset, 1] = np.mean(verts[feet_subset][:, 1])
+
+            smpl_joint_parents = self.parents.cpu().numpy()
+            joint_pick_idx = [SMPLX_BONE_ORDER_NAMES.index(i) for i in SMPLH_BONE_ORDER_NAMES]
+
+            joint_pos = Jtr
+            joint_offsets = {joint_names[c]: (joint_pos[:, c] - joint_pos[:, p]) if c > 0 else joint_pos[:, c] for c, p in enumerate(smpl_joint_parents) if joint_names[c] in self.joint_names}
+            joint_parents = {x: joint_names[i] if i >= 0 else None for x, i in zip(joint_names, smpl_joint_parents) if joint_names[i] in self.joint_names and x in self.joint_names}
+            joint_pos = joint_pos[:, joint_pick_idx]
+
+            skin_weights = self.lbs_weights.numpy()[:, self.parents_to_use]
+            
+            return (
+                verts,
+                joint_pos,
+                skin_weights,
+                joint_names,
                 joint_offsets,
                 joint_parents,
                 self.joint_axes,

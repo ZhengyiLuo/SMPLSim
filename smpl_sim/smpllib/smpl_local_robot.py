@@ -1241,15 +1241,19 @@ class SMPL_Robot:
                 gender="neutral",
                 use_pca=False,
                 create_transl=False,
+                flat_hand_mean=True,
             )
             self.smpl_parser_m = SMPLX_Parser(model_path=data_dir,
                                               gender="male",
                                               use_pca=False,
-                                              create_transl=False)
+                                              create_transl=False, 
+                                              flat_hand_mean=True,
+                                              )
             self.smpl_parser_f = SMPLX_Parser(model_path=data_dir,
                                               gender="female",
                                               use_pca=False,
-                                              create_transl=False)
+                                              create_transl=False, 
+                                              flat_hand_mean=True,)
 
         self.load_from_skeleton()
         self.joint_names = [b.name for b in self.bodies]
@@ -1414,7 +1418,7 @@ class SMPL_Robot:
                 replace_feet=self.replace_feet,
             )
         else:
-            self.skeleton = Skeleton()
+            self.skeleton = Skeleton(smpl_model = self.smpl_model)
             if self.smpl_model == "smpl":
                 zero_pose = torch.zeros((1, 72))
             else:
@@ -2419,7 +2423,7 @@ if __name__ == "__main__":
         "joint_params": {},
         "geom_params": {},
         "actuator_params": {},
-        "model": "smpl",
+        "model": "smplx",
         "ball_joint": False, 
         "create_vel_sensors": True, # Create global and local velocities sensors. 
     }
