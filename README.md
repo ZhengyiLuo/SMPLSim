@@ -7,13 +7,10 @@
 
 ```
 python examples/env_humanoid_test.py headless=False
-python smpl_sim/run.py env=speed
-python smpl_sim/run.py env=getup
-python smpl_sim/run.py env=reach
-
+python smpl_sim/run.py env=speed exp_name=speed env.self_obs_v=2 
+python smpl_sim/run.py env=getup exp_name=speed env.self_obs_v=2 
+python smpl_sim/run.py env=reach exp_name=speed env.self_obs_v=2 
 ```
-
-Authors: [@Zhengyi](https://github.com/ZhengyiLuo)  [@Matteo](https://github.com/teopir)
 
 
 ## Citation
