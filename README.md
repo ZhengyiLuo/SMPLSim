@@ -25,7 +25,7 @@ python smpl_sim/run.py env=reach exp_name=speed env.self_obs_v=2 robot.create_ve
 ## Citation
 If you find this work useful for your research, please cite our paper:
 ```
-PHC
+PHC:
 @inproceedings{Luo2023PerpetualHC,
     author={Zhengyi Luo and Jinkun Cao and Alexander W. Winkler and Kris Kitani and Weipeng Xu},
     title={Perpetual Humanoid Control for Real-time Simulated Avatars},
