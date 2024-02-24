@@ -2423,9 +2423,9 @@ if __name__ == "__main__":
         "joint_params": {},
         "geom_params": {},
         "actuator_params": {},
-        "model": "smplx",
+        "model": "smpl",
         "ball_joint": False, 
-        "create_vel_sensors": True, # Create global and local velocities sensors. 
+        "create_vel_sensors": False, # Create global and local velocities sensors. 
     }
     smpl_robot = SMPL_Robot(robot_cfg)
     params_names = smpl_robot.get_params(get_name=True)
@@ -2438,9 +2438,9 @@ if __name__ == "__main__":
 
     smpl_robot.load_from_skeleton(betas=betas, objs_info=None, gender=gender)
     print(smpl_robot.height)
-
-    smpl_robot.write_xml(f"smpl_humanoid.xml")
-    m = mujoco.MjModel.from_xml_path(f"smpl_humanoid.xml")
+    smpl_robot.write_xml(f"test.xml")
+    smpl_robot.write_xml(f"/tmp/smpl_humanoid.xml")
+    m = mujoco.MjModel.from_xml_path(f"/tmp/smpl_humanoid.xml")
     d = mujoco.MjData(m)
 
     with mujoco.viewer.launch_passive(m, d) as viewer:
