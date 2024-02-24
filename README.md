@@ -3,6 +3,10 @@
 
 `smpl_sim` is a pip-installable library containing a modelization of the SMPL humanoid in different simulators (MUJOCO and Isaac Gym). It is a minimal library to support simple humanoid tasks, and is the basis library for doing more complicated tasks such as motion imitation. 
 
+
+## Core Features
+This repo supports creating the xml files for SMPL/SMPLH/SMPLX compatible humanoid models in MUJOCO>=3. It also supports creating the humanoid models in Isaac Gym. It also provides a simple PPO implementation for training the humanoid models in MUJOCO. 
+
 ### Commands:
 
 ```
@@ -16,13 +20,23 @@ python smpl_sim/run.py env=reach exp_name=speed env.self_obs_v=2 robot.create_ve
 ## Citation
 If you find this work useful for your research, please cite our paper:
 ```
+PHC
 @inproceedings{Luo2023PerpetualHC,
     author={Zhengyi Luo and Jinkun Cao and Alexander W. Winkler and Kris Kitani and Weipeng Xu},
     title={Perpetual Humanoid Control for Real-time Simulated Avatars},
     booktitle={International Conference on Computer Vision (ICCV)},
     year={2023}
-}            
+}           
+
+UHC:
+@inproceedings{Luo2021DynamicsRegulatedKP,
+  title={Dynamics-Regulated Kinematic Policy for Egocentric Pose Estimation},
+  author={Zhengyi Luo and Ryo Hachiuma and Ye Yuan and Kris Kitani},
+  booktitle={Advances in Neural Information Processing Systems},
+  year={2021}
+}
 ```
+
 
 Also consider citing these prior works that are used in this project:
 
@@ -42,9 +56,4 @@ Also consider citing these prior works that are used in this project:
     year={2023}
 }     
 
-@inproceedings{Luo2021DynamicsRegulatedKP,
-  title={Dynamics-Regulated Kinematic Policy for Egocentric Pose Estimation},
-  author={Zhengyi Luo and Ryo Hachiuma and Ye Yuan and Kris Kitani},
-  booktitle={Advances in Neural Information Processing Systems},
-  year={2021}
-}
+```
