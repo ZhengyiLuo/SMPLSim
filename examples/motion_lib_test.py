@@ -35,8 +35,7 @@ from smpl_sim.smpllib.motion_lib_base import FixHeightMode
 def main(cfg : DictConfig) -> None:
     # motions = joblib.load("sample_data/amass_isaac_standing_upright_slim.pkl")
     device = torch.device("cpu")
-    motion_file = "/hdd/zen/data/ActBound/AMASS/amass_copycat_take6_test.pkl"
-    # motion_file = "data/amass/singles/0-KIT_3_walking_slow08_poses.pkl"
+    motion_file = "data/amass/singles/0-KIT_3_walking_slow08_poses.pkl"
     # motion_file = "data/amass/singles/0-SSM_synced_20160930_50032_punch_kick_sync_poses.pkl"
     motion_lib_cfg = EasyDict({
         "motion_file": motion_file,
