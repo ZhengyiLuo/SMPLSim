@@ -12,6 +12,7 @@ import mujoco
 from scipy.spatial.transform import Rotation as sRot
 from enum import Enum
 from collections import defaultdict
+import torch
 
 from smpl_sim.envs.base_env import BaseEnv
 import smpl_sim.envs.controllers as ctrls
