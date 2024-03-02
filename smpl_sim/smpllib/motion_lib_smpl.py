@@ -113,7 +113,7 @@ class MotionLibSMPL(MotionLibBase):
                 start = random.randint(0, seq_len - max_len)
                 end = start + max_len
             
-            trans = to_torch(curr_file['trans']).float().clone()[start:end]
+            trans = to_torch(curr_file['trans'] if "trans" in curr_file else curr_file['trans_orig']).float().clone()[start:end]
             
             pose_aa = to_torch(curr_file['pose_aa'][start:end]).float().clone()
             if pose_aa.shape[1] == 156:
