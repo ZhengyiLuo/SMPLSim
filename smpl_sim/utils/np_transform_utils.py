@@ -1,5 +1,6 @@
 # Mujoco: wxyz. Isaac and sRot: xyzw.
 import numpy as np
+
 def wxyz_to_xyzw(quat):
     return quat[..., [1, 2, 3, 0]]
 

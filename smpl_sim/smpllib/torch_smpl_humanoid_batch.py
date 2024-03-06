@@ -30,16 +30,20 @@ import scipy.ndimage as ndimage
 import smpl_sim.utils.pytorch3d_transforms as tRot
 from collections import defaultdict
 import smpl_sim.utils.np_transform_utils as npt_utils
+from smpl_sim.smpllib.smpl_joint_names import SMPL_BONE_ORDER_NAMES, SMPLH_BONE_ORDER_NAMES, SMPLX_BONE_ORDER_NAMES, SMPL_MUJOCO_NAMES, SMPLH_MUJOCO_NAMES
 
 class Humanoid_Batch:
 
     def __init__(self, smpl_model="smpl", data_dir="data/smpl", filter_vel = True):
-        
         self.smpl_model = smpl_model
         if self.smpl_model == "smpl":
-            self.smpl_parser_n = SMPL_Parser(model_path=data_dir, gender="neutral")
-            self.smpl_parser_m = SMPL_Parser(model_path=data_dir, gender="male")
-            self.smpl_parser_f = SMPL_Parser(model_path=data_dir, gender="female")
+                self.smpl_parser_n = SMPL_Parser(model_path=data_dir, gender="neutral")
+                self.smpl_parser_m = SMPL_Parser(model_path=data_dir, gender="male")
+                self.smpl_parser_f = SMPL_Parser(model_path=data_dir, gender="female")
+                self.bone_mujoco_names = SMPL_MUJOCO_NAMES  
+                self._parents = [-1, 0, 1, 2, 3, 0, 5, 6, 7, 0, 9, 10, 11, 12, 11, 14, 15, 16, 17, 11, 19, 20, 21, 22] # Mujoco's order
+                self.bone_rodered_names = SMPL_BONE_ORDER_NAMES
+                
         elif self.smpl_model == "smplh":
             self.smpl_parser_n = SMPLH_Parser(
                 model_path=data_dir,
@@ -49,18 +53,24 @@ class Humanoid_Batch:
             )
             self.smpl_parser_m = SMPLH_Parser(model_path=data_dir, gender="male", use_pca=False, create_transl=False)
             self.smpl_parser_f = SMPLH_Parser(model_path=data_dir, gender="female", use_pca=False, create_transl=False)
+            self.bone_mujoco_names = SMPLH_MUJOCO_NAMES 
+            self._parents = [-1,  0,  1,  2,  3,  0,  5,  6,  7,  0,  9, 10, 11, 12, 11, 14, 15, 16, 17, 18, 19, 17, 21, 22, 17, 24, 25, 17, 27, 28, 17, 30, 31, 11, 33, 34, 35, 36, 37, 38, 36, 40, 41, 36, 43, 44, 36, 46, 47, 36, 49, 50]
+            self.bone_rodered_names = SMPLH_BONE_ORDER_NAMES
         elif self.smpl_model == "smplx":
             self.smpl_parser_n = SMPLX_Parser(
                 model_path=data_dir,
                 gender="neutral",
                 use_pca=False,
                 create_transl=False,
+                flat_hand_mean = True,
             )
-            self.smpl_parser_m = SMPLX_Parser(model_path=data_dir, gender="male", use_pca=False, create_transl=False)
-            self.smpl_parser_f = SMPLX_Parser(model_path=data_dir, gender="female", use_pca=False, create_transl=False)
-
-        self.model_names = ['Pelvis', 'L_Hip', 'L_Knee', 'L_Ankle', 'L_Toe', 'R_Hip', 'R_Knee', 'R_Ankle', 'R_Toe', 'Torso', 'Spine', 'Chest', 'Neck', 'Head', 'L_Thorax', 'L_Shoulder', 'L_Elbow', 'L_Wrist', 'L_Hand', 'R_Thorax', 'R_Shoulder', 'R_Elbow', 'R_Wrist', 'R_Hand']
-        self._parents = [-1, 0, 1, 2, 3, 0, 5, 6, 7, 0, 9, 10, 11, 12, 11, 14, 15, 16, 17, 11, 19, 20, 21, 22] # mujoco order SMPL parents. 
+            self.smpl_parser_m = SMPLX_Parser(model_path=data_dir, gender="male", use_pca=False, create_transl=False, flat_hand_mean = True,)
+            self.smpl_parser_f = SMPLX_Parser(model_path=data_dir, gender="female", use_pca=False, create_transl=False, flat_hand_mean = True,)
+            self.bone_mujoco_names = SMPLH_MUJOCO_NAMES 
+            self._parents = [-1,  0,  1,  2,  3,  0,  5,  6,  7,  0,  9, 10, 11, 12, 11, 14, 15, 16, 17, 18, 19, 17, 21, 22, 17, 24, 25, 17, 27, 28, 17, 30, 31, 11, 33, 34, 35, 36, 37, 38, 36, 40, 41, 36, 43, 44, 36, 46, 47, 36, 49, 50]
+            self.bone_rodered_names = SMPLH_BONE_ORDER_NAMES
+            
+            
         self.smpl_2_mujoco = [SMPL_BONE_ORDER_NAMES.index(i) for i in self.model_names] # Apply Mujoco order
         self.mujoco_2_smpl = [self.model_names.index(i) for i in SMPL_BONE_ORDER_NAMES] # Apply Mujoco order
         self.num_joints = len(self._parents)
