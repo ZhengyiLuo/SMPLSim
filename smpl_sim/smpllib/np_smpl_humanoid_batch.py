@@ -5,20 +5,20 @@ import os
 import sys
 import pdb
 import os.path as osp
-from copycat.utils.torch_ext import dict_to_torch
+from smpl_sim.utils.torch_ext import dict_to_torch
 
 sys.path.append(os.getcwd())
 
-from copycat.utils.torch_utils import *
-from copycat.utils.transform_utils import *
+from smpl_sim.utils.torch_utils import *
+from smpl_sim.utils.np_transform_utils import *
 from scipy.spatial.transform import Rotation as sRot
 import joblib
 from mujoco_py import load_model_from_path
-from copycat.smpllib.smpl_mujoco import SMPLConverter, smpl_to_qpose, smpl_to_qpose_torch, SMPL_BONE_ORDER_NAMES
-from copycat.smpllib.smpl_parser import SMPL_EE_NAMES
-from copycat.utils.tools import get_expert, get_expert_master
+from smpl_sim.smpllib.smpl_joint_names import SMPLConverter, smpl_to_qpose, smpl_to_qpose_torch, SMPL_BONE_ORDER_NAMES
+from smpl_sim.smpllib.smpl_parser import SMPL_EE_NAMES
+from smpl_sim.utils.tools import get_expert, get_expert_master
 import pytorch3d.transforms as tR
-from copycat.smpllib.smpl_parser import (
+from smpl_sim.smpllib.smpl_parser import (
     SMPL_Parser,
     SMPLH_Parser,
     SMPLX_Parser,
@@ -406,12 +406,12 @@ class Humanoid_Batch:
 
 if __name__ == "__main__":
     import mujoco_py
-    from copycat.smpllib.smpl_robot import Robot
-    from copycat.smpllib.torch_smpl_humanoid import Humanoid
-    from copycat.utils.config_utils.copycat_config import Config
-    from copycat.data_loaders.dataset_amass_single import DatasetAMASSSingle
-    from copycat.utils.torch_ext import dict_to_torch
-    from copycat.smpllib.smpl_mujoco import smpl_to_qpose_torch, smplh_to_smpl
+    from smpl_sim.smpllib.smpl_robot import Robot
+    from smpl_sim.smpllib.torch_smpl_humanoid import Humanoid
+    from smpl_sim.utils.config_utils.copycat_config import Config
+    from smpl_sim.data_loaders.dataset_amass_single import DatasetAMASSSingle
+    from smpl_sim.utils.torch_ext import dict_to_torch
+    from smpl_sim.smpllib.smpl_mujoco import smpl_to_qpose_torch, smplh_to_smpl
     torch.manual_seed(0)
 
     cfg = Config(

@@ -105,31 +105,62 @@ GEOM_TYPES = {
 # }
 
 # PHC's gains
-# GAINS = {
-#     "L_Hip":      [800, 80, 1, 500],
-#     "L_Knee":     [800, 80, 1, 500],
-#     "L_Ankle":    [800, 80, 1, 500],
-#     "L_Toe":      [500, 50, 1, 500],
-#     "R_Hip":      [800, 80, 1, 500],
-#     "R_Knee":     [800, 80, 1, 500],
-#     "R_Ankle":    [800, 80, 1, 500],
-#     "R_Toe":      [500, 50, 1, 500],
-#     "Torso":      [1000, 100, 1, 500],
-#     "Spine":      [1000, 100, 1, 500],
-#     "Chest":      [1000, 100, 1, 500],
-#     "Neck":       [500, 50, 1, 250],
-#     "Head":       [500, 50, 1, 250],
-#     "L_Thorax":   [500, 50, 1, 500],
-#     "L_Shoulder": [500, 50, 1, 500],
-#     "L_Elbow":    [500, 50, 1, 150],
-#     "L_Wrist":    [300, 30, 1, 150],
-#     "L_Hand":     [300, 30, 1, 150],
-#     "R_Thorax":   [500, 50, 1, 150],
-#     "R_Shoulder": [500, 50, 1, 250],
-#     "R_Elbow":    [500, 50, 1, 150],
-#     "R_Wrist":    [300, 30, 1, 150],
-#     "R_Hand":     [300, 30, 1, 150],
-# }
+GAINS_PHC = {
+    "L_Hip": [800, 80, 1, 500],
+    "L_Knee": [800, 80, 1, 500],
+    "L_Ankle": [800, 80, 1, 500],
+    "L_Toe": [500, 50, 1, 500],
+    "R_Hip": [800, 80, 1, 500],
+    "R_Knee": [800, 80, 1, 500],
+    "R_Ankle": [800, 80, 1, 500],
+    "R_Toe": [500, 50, 1, 500],
+    "Torso": [1000, 100, 1, 500],
+    "Spine": [1000, 100, 1, 500],
+    "Chest": [1000, 100, 1, 500],
+    "Neck": [500, 50, 1, 250],
+    "Head": [500, 50, 1, 250],
+    "L_Thorax": [500, 50, 1, 500],
+    "L_Shoulder": [500, 50, 1, 500],
+    "L_Elbow": [500, 50, 1, 150],
+    "L_Wrist": [300, 30, 1, 150],
+    "L_Hand": [300, 30, 1, 150],
+    "R_Thorax": [500, 50, 1, 150],
+    "R_Shoulder": [500, 50, 1, 250],
+    "R_Elbow": [500, 50, 1, 150],
+    "R_Wrist": [300, 30, 1, 150],
+    "R_Hand": [300, 30, 1, 150],
+    
+    "L_Index1": [100, 10, 1, 150],
+    "L_Index2": [100, 10, 1, 150],
+    "L_Index3": [100, 10, 1, 150],
+    "L_Middle1": [100, 10, 1, 150],
+    "L_Middle2": [100, 10, 1, 150],
+    "L_Middle3": [100, 10, 1, 150],
+    "L_Pinky1": [100, 10, 1, 150],
+    "L_Pinky2": [100, 10, 1, 150],
+    "L_Pinky3": [100, 10, 1, 150],
+    "L_Ring1": [100, 10, 1, 150],
+    "L_Ring2": [100, 10, 1, 150],
+    "L_Ring3": [100, 10, 1, 150],
+    "L_Thumb1": [100, 10, 1, 150],
+    "L_Thumb2": [100, 10, 1, 150],
+    "L_Thumb3": [100, 10, 1, 150],
+    "R_Index1": [100, 10, 1, 150],
+    "R_Index2": [100, 10, 1, 150],
+    "R_Index3": [100, 10, 1, 150],
+    "R_Middle1": [100, 10, 1, 150],
+    "R_Middle2": [100, 10, 1, 150],
+    "R_Middle3": [100, 10, 1, 150],
+    "R_Pinky1": [100, 10, 1, 150],
+    "R_Pinky2": [100, 10, 1, 150],
+    "R_Pinky3": [100, 10, 1, 150],
+    "R_Ring1": [100, 10, 1, 150],
+    "R_Ring2": [100, 10, 1, 150],
+    "R_Ring3": [100, 10, 1, 150],
+    "R_Thumb1": [100, 10, 1, 150],
+    "R_Thumb2": [100, 10, 1, 150],
+    "R_Thumb3": [100, 10, 1, 150],
+}
 
 ### UHC Phd
 # GAINS = {
@@ -158,7 +189,7 @@ GEOM_TYPES = {
 #     "R_Hand":       [100, 10, 1, 150, 1, 1],
 # }
 
-GAINS = {
+GAINS_MJ = {
     "L_Hip":            [250, 2.5, 1, 500, 10, 2],
     "L_Knee":           [250, 2.5, 1, 500, 10, 2],
     "L_Ankle":          [150, 2.5, 1, 500, 10, 2],
@@ -276,6 +307,7 @@ class Skeleton:
         real_weight=False,
         big_ankle=False,
         box_body = False, 
+        sim='mujoco', 
         ball_joints = False, 
         create_vel_sensors = False, 
         exclude_contacts = []
@@ -297,6 +329,7 @@ class Skeleton:
         self.freeze_hand = freeze_hand
         self.box_body = box_body
         self.ball_joints = ball_joints
+        self.sim = sim
         joint_names = list(filter(lambda x: all([t not in x for t in exclude_bones]), offsets.keys()))
         dof_ind = {"x": 0, "y": 1, "z": 2}
         self.len_scale = scale
@@ -369,7 +402,10 @@ class Skeleton:
                 attr = dict()
                 attr["name"] = name
                 attr["joint"] = name
-                attr["gear"] = str(GAINS[name[:-2]][2])
+                if self.sim in ["mujoco"]:
+                    attr["gear"] = str(GAINS_MJ[name[:-2]][2])
+                elif self.sim in ["isaacgym"]:
+                    attr["gear"] = "500"
                 SubElement(actuators, "motor", attr)
             
             
@@ -440,7 +476,7 @@ class Skeleton:
                 j_attr["name"] = bone.name 
                 j_attr["type"] = "ball"
                 j_attr["pos"] = "{0:.4f} {1:.4f} {2:.4f}".format(*(bone.pos + offset))
-                j_attr["user"] = " ".join([ str(s) for s in GAINS[bone.name]]) # using user to set the max torque
+                j_attr["user"] = " ".join([ str(s) for s in GAINS_MJ[bone.name]]) # using user to set the max torque
                 
                 if j_attr["name"] in ref_angles.keys():
                     j_attr["ref"] = f"{ref_angles[j_attr['name']]:.1f}"
@@ -456,16 +492,14 @@ class Skeleton:
                     j_attr["pos"] = "{0:.4f} {1:.4f} {2:.4f}".format(*(bone.pos + offset))
                     j_attr["axis"] = "{0:.4f} {1:.4f} {2:.4f}".format(*axis)
                     
-                    ################################################################################
-                    # j_attr["stiffness"] = str(GAINS[bone.name][-2])
-                    # j_attr["damping"] = str(GAINS[bone.name][-1])
-                    ################################################################################
-                    
-                    # j_attr["stiffness"] = str(1)
-                    # j_attr["damping"] = str(1)
-                    
-                    j_attr["user"] = " ".join([ str(s) for s in GAINS[bone.name]]) # using user to set the max torque
-                    j_attr["armature"] = "0.01"
+                    if self.sim in ["mujoco"]:
+                        j_attr["user"] = " ".join([ str(s) for s in GAINS_MJ[bone.name]]) # using user to set the max torque
+                        j_attr["armature"] = "0.01"
+                    elif self.sim in ["isaacgym"]:
+                        j_attr["stiffness"] = str(GAINS_PHC[bone.name][0])
+                        j_attr["damping"] = str(GAINS_PHC[bone.name][1])
+                        j_attr["armature"] = "0.02"
+                        
 
                     if i < len(bone.lb):
                         j_attr["range"] = "{0:.4f} {1:.4f}".format(bone.lb[i], bone.ub[i])
@@ -601,9 +635,6 @@ class Skeleton:
                 rot = np.array([1, 0, 0, 0])
                 
                 g_attr["type"] = "box"
-                g_attr["pos"] = "{0:.4f} {1:.4f} {2:.4f}".format(*pos)
-                g_attr["size"] = "{0:.4f} {1:.4f} {2:.4f}".format(*size)
-                g_attr["quat"] = "{0:.4f} {1:.4f} {2:.4f} {3:.4f}".format(*rot)
 
             if bone.name == "Pelvis":
                 size /= 1.75  # ZL Hack: shrinkage
@@ -628,7 +659,7 @@ class Skeleton:
                 
             if self.real_weight_porpotion_boxes:
                 g_attr["density"] = str((hull_params['volume'] / (size[0] * size[1] * size[2] * 8).item()) * base_density)
-
+            
             g_attr["pos"] = "{0:.4f} {1:.4f} {2:.4f}".format(*pos)
             g_attr["size"] = "{0:.4f} {1:.4f} {2:.4f}".format(*size)
             g_attr["quat"] = "{0:.4f} {1:.4f} {2:.4f} {3:.4f}".format(*rot)
