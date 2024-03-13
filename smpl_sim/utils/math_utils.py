@@ -10,6 +10,22 @@ from smpl_sim.utils.transformation import (
     rotation_from_matrix,
 )
 
+class LinearAnneal:
+    def __init__(self, start_value, end_value, total_steps):
+        self.start_value = start_value
+        self.end_value = end_value
+        self.total_steps = total_steps
+        self.current_step = 0
+
+    def step(self):
+        """Return the next annealed value."""
+        if self.current_step >= self.total_steps:
+            return self.end_value
+        alpha = self.current_step / self.total_steps
+        value = (1 - alpha) * self.start_value + alpha * self.end_value
+        self.current_step += 1
+        return value
+
 
 def gmof(res, sigma):
     """
@@ -44,21 +60,21 @@ def normal_log_density(x, mean, log_std, std):
 
 def get_qvel_fd_new(cur_qpos, next_qpos, dt, transform=None):
     v = (next_qpos[:3] - cur_qpos[:3]) / dt
-    qrel = quaternion_multiply(next_qpos[3:7], quaternion_inverse(cur_qpos[3:7]))
+    qrel = quaternion_multiply(next_qpos[3:7],
+                               quaternion_inverse(cur_qpos[3:7]))
     axis, angle = rotation_from_quaternion(qrel, True)
     while angle > np.pi:
         angle -= 2 * np.pi
     while angle < -np.pi:
         angle += 2 * np.pi
     rv = (axis * angle) / dt
-    rv = transform_vec(rv, cur_qpos[3:7], "root")  # angular velocity is in root coord
+    rv = transform_vec(rv, cur_qpos[3:7],
+                       "root")  # angular velocity is in root coord
     diff = next_qpos[7:] - cur_qpos[7:]
-    
     while np.any(diff > np.pi):
         diff[diff > np.pi] -= 2 * np.pi
     while np.any(diff < -np.pi):
         diff[diff < -np.pi] += 2 * np.pi
-        
     qvel = diff / dt
     qvel = np.concatenate((v, rv, qvel))
     if transform is not None:
