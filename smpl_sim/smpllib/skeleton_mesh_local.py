@@ -324,7 +324,10 @@ class Skeleton:
         # ZL: Isaac version
         for bone in self.bones:
             if os.path.exists(f"{self.model_dir}/geom/{bone.name}.stl"):
-                attr = {"file": f"{self.model_dir.split('/')[-1]}/geom/{bone.name}.stl", "name": f"{bone.name}_mesh"}
+                if self.sim in ["mujoco"]:
+                    attr = {"file": f"{self.model_dir}/geom/{bone.name}.stl", "name": f"{bone.name}_mesh"}
+                elif self.sim in ["isaacgym"]:
+                    attr = {"file": f"{self.model_dir.split('/')[-1]}/geom/{bone.name}.stl", "name": f"{bone.name}_mesh"}
                 SubElement(asset, "mesh", attr)
      
 
@@ -447,7 +450,7 @@ class Skeleton:
             s_attr["type"] = "sphere"
             s_attr["size"] = "0.03"
             SubElement(node, "site", s_attr)
-
+        
         geom_path = f"{self.model_dir}/geom/{bone.name}.stl"
         if os.path.exists(geom_path):
             g_attr = {"type": "mesh", "mesh": f"{bone.name}_mesh"} 

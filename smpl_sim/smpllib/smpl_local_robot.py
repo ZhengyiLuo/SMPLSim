@@ -102,7 +102,7 @@ def get_joint_geometries(
             print(f"{jname} has no vertices!")
             continue
         norm_verts = (smpl_verts[vind] - smpl_jts[jind]) * scale_dict.get(jname, 1)
-
+        
         hull = ConvexHull(smpl_verts[vind])
         norm_hull = ConvexHull(norm_verts)
         hull_dict[jname] = {
@@ -155,6 +155,7 @@ def get_geom_dict(
     hull_dict = {}
 
     # create joint geometries
+    
     for jind, jname in enumerate(joint_names):
         vind = np.where(vert_to_joint == jind)[0]
         if len(vind) == 0:
@@ -631,7 +632,7 @@ class Geom:
                                                   np.linalg.norm(vec))
 
     def sync_node(self):
-        self.node.attrib.pop("name", None)
+        # self.node.attrib.pop("name", None)
         if not self.size is None:
             self.node.attrib["size"] = " ".join(
                 [f"{x:.6f}".rstrip("0").rstrip(".") for x in self.size])
@@ -1280,7 +1281,7 @@ class SMPL_Robot:
     ):
 
         self.tree = None  # xml tree
-
+        
         if gender[0] == 0:
             self.smpl_parser = smpl_parser = self.smpl_parser_n
         elif gender[0] == 1:
@@ -1317,7 +1318,7 @@ class SMPL_Robot:
             self.beta = torch.hstack([self.beta, torch.zeros((1, 6)).float()])
         elif self.smpl_model == "smplx" and (self.beta.shape[1] == 10 or self.beta.shape[1] == 16):
             self.beta = torch.hstack([self.beta, torch.zeros((1, 20 - self.beta.shape[1])).float()])
-
+        
         # self.remove_geoms()
         size_dict = {}
         if self.mesh:
@@ -1345,7 +1346,9 @@ class SMPL_Robot:
                 joint_range,
                 contype,
                 conaffinity,
-            ) = (smpl_parser.get_mesh_offsets(zero_pose=zero_pose, betas=self.beta, flatfoot=self.flatfoot) )
+            ) = (smpl_parser.get_mesh_offsets(zero_pose=zero_pose, betas=self.beta, flatfoot=self.flatfoot)) if v_template is None else smpl_parser.get_mesh_offsets(
+                zero_pose=zero_pose, v_template=v_template, flatfoot=self.flatfoot
+            )
 
             if self.rel_joint_lm:
                 if self.upright_start:
@@ -1415,8 +1418,8 @@ class SMPL_Robot:
                 zero_pose[0, :3] = torch.tensor(
                     [1.2091996, 1.2091996, 1.2091996])
 
-            verts, joints, skin_weights, joint_names, joint_offsets, parents_dict, channels, joint_range = smpl_parser.get_offsets(
-                betas=self.beta, zero_pose=zero_pose)
+            verts, joints, skin_weights, joint_names, joint_offsets, parents_dict, channels, joint_range = \
+                smpl_parser.get_offsets(betas=self.beta, zero_pose=zero_pose) if v_template is None  else smpl_parser.get_offsets(v_template=v_template, zero_pose=zero_pose)
 
             self.height = torch.max(verts[:, 1]) - torch.min(verts[:, 1])
             self.hull_dict = get_geom_dict(verts,
@@ -1943,7 +1946,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     args = parser.parse_args()
     robot_cfg = {
-        "mesh": False,
+        "mesh": True,
         "rel_joint_lm": False,
         "upright_start": False,
         "remove_toe": False,
@@ -1990,7 +1993,7 @@ if __name__ == "__main__":
 
             # mj_step can be replaced with code that also evaluates
             # a policy and applies a control signal before stepping the physics.
-            mujoco.mj_forward(mj_model, mj_data)
+            mujoco.mj_step(mj_model, mj_data)
             
 
             # Example modification of a viewer option: toggle contact points every two seconds.

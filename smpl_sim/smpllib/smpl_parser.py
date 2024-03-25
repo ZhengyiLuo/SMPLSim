@@ -429,7 +429,7 @@ class SMPLX_Parser(_SMPLX):
             global_orient=pose[:, :3],
             left_hand_pose=pose[:, 66:111],
             right_hand_pose=pose[:, 111:156],
-            betas=th_betas,
+            betas=th_betas if self.v_template is None else None,
             transl=th_trans,
         )
         vertices = smpl_output.vertices
@@ -469,6 +469,9 @@ class SMPLX_Parser(_SMPLX):
     def get_mesh_offsets(self, v_template=None, zero_pose=None, betas=None, flatfoot=False):
         if not v_template is None:
             self.v_template = v_template
+            if not betas is None:
+                raise Exception("v_template and betas cannot be set at the same time")
+        
         with torch.no_grad():
             joint_names = SMPLX_BONE_ORDER_NAMES
             if zero_pose is None:

@@ -29,28 +29,6 @@ def smpl_add_camera(xml: str):
     ))
     light.getparent().remove(light)
 
-    # cam_head = etree.fromstring('<camera name="egocentric" pos="0 0 0" xyaxes="-1 0 0 0 1 0" fovy="80"/>')
-    # head = tree.xpath("//joint[@name='Head_x']")[0]
-    # head.addprevious(cam_head)
-    
-
-    # this is for dumping the file
-    # parser = etree.XMLParser(remove_blank_text=True)
-    # etree.ElementTree(etree.fromstring(etree.tostring(tree),
-    #                                 parser=parser)).write("parsed_TTT.xml",
-    #                                                         pretty_print=True)
-
-    # this is to create a new camera for tracking but not working
-    # check how to update the position
-    # # setup camera
-    # self.smpl_body_to_id = {}
-    # for i in range(self.mj_model.nbody):
-    #     body_name = self.mj_model.body(i).name
-    #     self.smpl_body_to_id[body_name] = i
-    # self.camera = mujoco.MjvCamera()
-    # self.camera.trackbodyid = self.smpl_body_to_id["Pelvis"]
-    # self.camera.type = mujoco.mjtCamera.mjCAMERA_TRACKING
-    # mujoco.mjv_defaultCamera(self.camera)
     return etree.tostring(tree)
 
 # def smpl_add_sensors(xml: str):
