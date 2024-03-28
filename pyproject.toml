@@ -30,6 +30,7 @@ dependencies = [
   'opencv-python',
   'chumpy',
   'imageio',
+  'gymnasium',
   'hydra-core>=1.3',
   'tqdm',
   "importlib-resources==3.0.0;python_version<'3.9'"
