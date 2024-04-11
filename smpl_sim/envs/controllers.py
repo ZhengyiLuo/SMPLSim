@@ -291,8 +291,6 @@ class PIDController:
         the :math:`k_p` parameters
     jkd : np.ndarray
         the :math:`k_d` parameters
-    jki : np.ndarray
-        the :math:`k_i` parameters
 
     """
 
@@ -310,8 +308,6 @@ class PIDController:
         self.torque_lim = torque_lim
         self.jkp = jkp
         self.jkd = jkd
-        self.jki = jki
-        self._integral = 0  # TODO: remove the integral part if not used
 
     def control(
         self, action: np.ndarray, mj_model: mujoco.MjModel, mj_data: mujoco.MjData
@@ -341,9 +337,13 @@ class PIDController:
         self._integral = np.clip(
             self._integral, -self.torque_lim, self.torque_lim
         )  # Avoid integral windup
-        torque = -self.jkp * error - self.jkd * qvel - self.jki * self._integral
+        torque = -self.jkp * error - self.jkd * qvel 
         torque = np.clip(torque, -self.torque_lim, self.torque_lim)
         return torque
 
     def reset(self) -> None:
         self._integral = 0
+
+    
+    
+

@@ -194,7 +194,7 @@ def get_optimizer(net, lr, weight_decay, optimizer_type = "adam",  **kwargs):
         raise ValueError("Unknown optimizer type: {}".format(optimizer_type))
 
 
-def estimate_advantages(rewards, masks, values, gamma, tau):
+def estimate_advantages(rewards, masks, not_truncated, values, gamma, tau):
     device = rewards.device
     rewards, masks, values = batch_to(torch.device('cpu'), rewards, masks, values)
     tensor_type = type(rewards)
@@ -215,6 +215,30 @@ def estimate_advantages(rewards, masks, values, gamma, tau):
 
     advantages, returns = batch_to(device, advantages, returns)
     return advantages, returns
+
+def estimate_advantages_fixed(rewards, not_reset, not_truncated, values, gamma, tau):
+    device = rewards.device
+    rewards, not_reset, not_truncated, values = batch_to(torch.device('cpu'), rewards, not_reset, not_truncated, values)
+    tensor_type = type(rewards)
+    deltas = tensor_type(rewards.size(0), 1)
+    advantages = tensor_type(rewards.size(0), 1)
+
+    prev_value = 0
+    prev_advantage = 0
+    for i in reversed(range(rewards.size(0))):
+        # fixed version
+        deltas[i] = rewards[i] + gamma * prev_value * not_truncated[i] - values[i]
+        advantages[i] = deltas[i] + gamma * tau * prev_advantage * not_reset[i]
+
+        prev_value = values[i, 0]
+        prev_advantage = advantages[i, 0]
+
+    returns = values + advantages
+    advantages = (advantages - advantages.mean()) / advantages.std()
+
+    advantages, returns = batch_to(device, advantages, returns)
+    return advantages, returns
+
 
 def set_optimizer_lr(optimizer, lr):
     for param_group in optimizer.param_groups:
