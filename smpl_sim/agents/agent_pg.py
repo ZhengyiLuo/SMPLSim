@@ -53,8 +53,8 @@ class AgentPG(Agent):
                 values = self.value_net(self.trans_value(states))
 
         """get advantage estimation from the trajectories"""
-        advantages, returns = estimate_advantages(rewards, not_reset, not_terminated, values, self.gamma, self.tau)
-        # advantages, returns = estimate_advantages_fixed(rewards, not_reset, not_terminated, values, self.gamma, self.tau)
+        # advantages, returns = estimate_advantages(rewards, not_reset, not_terminated, values, self.gamma, self.tau)
+        advantages, returns = estimate_advantages_fixed(rewards, not_reset, not_terminated, values, self.gamma, self.tau)
 
         self.update_policy(states, actions, returns, advantages, exps)
 
