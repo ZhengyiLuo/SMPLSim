@@ -246,6 +246,7 @@ class HumanoidEnv(BaseEnv):
                 )
                 
                 self.default_xml_str = self.robot.export_xml_string().decode("utf-8")
+                # self.robot.write_xml("test.xml")
             else:
                 print("Missing SMPL Files!!!!! Using mean netural body ")
                 default_smpl_file = files('smpl_sim').joinpath('data/assets/mjcf/smpl_humanoid.xml')
@@ -314,7 +315,7 @@ class HumanoidEnv(BaseEnv):
         if self.control_mode == "uhc_pd":
             self.ctrler = ctrls.StablePDController(self._pd_action_scale, self._pd_action_offset, self.qvel_lim, self.torque_lim, self.jkp / self.cfg.env.pdp_scale, self.jkd / self.cfg.env.pdd_scale)
         if self.control_mode == "pd":
-            self.ctrler = ctrls.PIDController(self._pd_action_scale, self._pd_action_offset, self.torque_lim, self.jkp / self.cfg.env.pdp_scale, self.jkd / self.cfg.env.pdd_scale, np.zeros_like(self.jkd))
+            self.ctrler = ctrls.PDController(self._pd_action_scale, self._pd_action_offset, self.torque_lim, self.jkp / self.cfg.env.pdp_scale, self.jkd / self.cfg.env.pdd_scale, np.zeros_like(self.jkd))
         elif self.control_mode == "simple_pid":
             self.ctrler = ctrls.SimplePID(self.jkp/10, np.ones_like(self.jkp), self.jkd/10, self.mj_model.opt.timestep*self.control_freq_inv,self.torque_lim, self._pd_action_scale, self._pd_action_offset)
         elif self.control_mode == "torque":

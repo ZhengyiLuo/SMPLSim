@@ -82,9 +82,12 @@ class Agent:
                 next_state = self.preprocess_obs(next_obs)
                 logger.step(self.env, reward, info)
 
-                mask = 0 if done else 1
+                # truncated end becuase of max steps or end of task, termianted end because of failure. 
+
+                not_resetted = 0 if done else 1
+                not_terminated = 0 if terminated else 1
                 exp = 1 - mean_action
-                self.push_memory(memory, state.squeeze(), actions, mask, next_state.squeeze(), reward, exp)
+                self.push_memory(memory, state.squeeze(), actions, not_resetted, not_terminated, next_state.squeeze(), reward, exp)
 
                 if pid == 0 and not self.headless:
                     self.env.render()
@@ -104,9 +107,9 @@ class Agent:
     def pre_episode(self):
         return
 
-    def push_memory(self, memory, state, action, mask, next_state, reward, exp):
-        memory.push(state, action, mask, next_state, reward, exp)
-
+    def push_memory(self, memory, state, action, not_reset, not_terminated, next_state, reward, exp):
+        memory.push(state, action, not_reset, not_terminated, next_state, reward, exp)
+        
     def pre_sample(self):
         # Function to be called before sampling, unique to each thread.
         return

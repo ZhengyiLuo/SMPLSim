@@ -262,38 +262,7 @@ class SimplePID:
         return output
 
 
-class PIDController:
-    """
-    PD computes the control forces as
-
-    .. math::
-        \tau^n = -k_p (q^{n}-\bar{q}^{n}) - k_d \dot{q}^{n} - k_i \int_y (q^{y}-\bar{q}^{y})
-
-    where :math:`q^n` and :math:`\dot{q}^n` are the position and velocity of the state at time :math:`n`.
-
-    Note that the desired position is computed from a normalized :math:`action \in [-1, 1]^d`, i.e.,
-
-    .. math::
-        \bar{q}^{n} = action * action\_scale + action\_offset
-
-    The output is clipped in the range :math:`[-torque\_lim, torque\_lim]`.
-
-
-    Attributes
-    ----------
-    pd_action_scale : np.ndarray
-        scale for action normalization
-    pd_action_offset : np.ndarray
-        offset for action normalization
-    torque_lim : np.ndarray
-        the output is clip in [-torque_lim, torque_lim]
-    jkp : np.ndarray
-        the :math:`k_p` parameters
-    jkd : np.ndarray
-        the :math:`k_d` parameters
-
-    """
-
+class PDController:
     def __init__(
         self,
         pd_action_scale: np.ndarray,
@@ -333,10 +302,6 @@ class PIDController:
         qpos = mj_data.qpos.copy()[7:]
         qvel = mj_data.qvel.copy()[6:]
         error = qpos - target_pos
-        self._integral = self._integral + error * dt
-        self._integral = np.clip(
-            self._integral, -self.torque_lim, self.torque_lim
-        )  # Avoid integral windup
         torque = -self.jkp * error - self.jkd * qvel 
         torque = np.clip(torque, -self.torque_lim, self.torque_lim)
         return torque

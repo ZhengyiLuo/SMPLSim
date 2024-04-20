@@ -46,15 +46,15 @@ class AgentPG(Agent):
         actions = torch.from_numpy(batch.actions).to(self.dtype).to(self.device)
         rewards = torch.from_numpy(batch.rewards).to(self.dtype).to(self.device)
         not_reset = torch.from_numpy(batch.not_reset).to(self.dtype).to(self.device)
-        not_truncated = torch.from_numpy(batch.not_truncated).to(self.dtype).to(self.device)
+        not_terminated = torch.from_numpy(batch.not_terminated).to(self.dtype).to(self.device)
         exps = torch.from_numpy(batch.exps).to(self.dtype).to(self.device)
         with to_test(*self.update_modules):
             with torch.no_grad():
                 values = self.value_net(self.trans_value(states))
 
         """get advantage estimation from the trajectories"""
-        # advantages, returns = estimate_advantages(rewards, not_reset, not_truncated, values, self.gamma, self.tau)
-        advantages, returns = estimate_advantages_fixed(rewards, not_reset, not_truncated, values, self.gamma, self.tau)
+        advantages, returns = estimate_advantages(rewards, not_reset, not_terminated, values, self.gamma, self.tau)
+        # advantages, returns = estimate_advantages_fixed(rewards, not_reset, not_terminated, values, self.gamma, self.tau)
 
         self.update_policy(states, actions, returns, advantages, exps)
 

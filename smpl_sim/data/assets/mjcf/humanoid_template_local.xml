@@ -4,7 +4,8 @@
 
   <default>
     <joint damping="0.0" armature="0.01" stiffness="0.0" limited="true"/>
-    <geom conaffinity="1" condim="3" contype="7" margin="0.001" rgba="0.8 0.6 .4 1"/>
+    <!-- <geom conaffinity="1" condim="3" contype="7" margin="0.001" rgba="0.8 0.6 .4 1"/> -->
+    <geom conaffinity="1" condim="3" contype="7" margin="0.001" rgba="1 1 1 1"/>
   </default>
 
   <asset>
