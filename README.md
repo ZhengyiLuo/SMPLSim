@@ -25,6 +25,16 @@ python smpl_sim/run.py env=reach exp_name=speed env.self_obs_v=2 robot.create_ve
 ## Citation
 If you find this work useful for your research, please cite our paper:
 ```
+PULSE:
+@inproceedings{
+luo2024universal,
+title={Universal Humanoid Motion Representations for Physics-Based Control},
+author={Zhengyi Luo and Jinkun Cao and Josh Merel and Alexander Winkler and Jing Huang and Kris M. Kitani and Weipeng Xu},
+booktitle={The Twelfth International Conference on Learning Representations},
+year={2024},
+url={https://openreview.net/forum?id=OrOd8PxOO2}
+}
+
 PHC:
 @inproceedings{Luo2023PerpetualHC,
     author={Zhengyi Luo and Jinkun Cao and Alexander W. Winkler and Kris Kitani and Weipeng Xu},

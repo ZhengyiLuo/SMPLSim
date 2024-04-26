@@ -631,29 +631,13 @@ class Geom:
                                                   np.linalg.norm(vec))
 
     def sync_node(self):
-        self.node.attrib['name'] = self.name
+        self.node.attrib.pop("name", None)
         if not self.size is None:
             self.node.attrib["size"] = " ".join(
                 [f"{x:.6f}".rstrip("0").rstrip(".") for x in self.size])
         self.node.attrib["density"] = " ".join(
             [f"{x * 1000:.6f}".rstrip("0").rstrip(".") for x in self.density])
-
-        # if self.type == "capsule":
-        #     start = self.start - self.body.pos if self.local_coord else self.start
-        #     end = self.end - self.body.pos if self.local_coord else self.end
-        #     self.node.attrib["fromto"] = " ".join(
-        #         [
-        #             f"{x:.6f}".rstrip("0").rstrip(".")
-        #             for x in np.concatenate([start, end])
-        #         ]
-        #     )
-        # elif self.type == "box" or self.type == "sphere":
-        #     # self.node.attrib["pos"] = " ".join(
-        #     #     [f"{x:.6f}".rstrip("0").rstrip(".") for x in self.pos + self.pos_delta]
-        #     # )
-        #     import ipdb; ipdb.set_trace()
-        #     pass
-
+        
     def get_params(self, param_list, get_name=False, pad_zeros=False):
         if "size" in self.param_specs:
             if get_name:
@@ -1204,9 +1188,9 @@ class SMPL_Robot:
         self.rel_joint_lm = cfg.get("rel_joint_lm", True)  # Rolling this out worldwide!!
         self.ball_joints = cfg.get("ball_joint", False)
         self.create_vel_sensors = cfg.get("create_vel_sensors", False)
+        self.sim = cfg.get("sim", "mujoco")
         
         os.makedirs("/tmp/smpl/", exist_ok=True)
-        self.masterfoot = cfg.get("masterfoot", False)
         self.param_specs = self.cfg.get("body_params", {})
         self.hull_dict = {}
         self.beta = (torch.zeros(
@@ -1329,10 +1313,10 @@ class SMPL_Robot:
         ## Clear up beta for smpl and smplh
         if self.smpl_model == "smpl" and self.beta.shape[1] == 16:
             self.beta = self.beta[:, :10]
-            # print(f"Incorrect shape size for {self.model}!!!")
         elif self.smpl_model == "smplh" and self.beta.shape[1] == 10:
             self.beta = torch.hstack([self.beta, torch.zeros((1, 6)).float()])
-            # print(f"Incorrect shape size for {self.model}!!!")
+        elif self.smpl_model == "smplx" and (self.beta.shape[1] == 10 or self.beta.shape[1] == 16):
+            self.beta = torch.hstack([self.beta, torch.zeros((1, 20 - self.beta.shape[1])).float()])
 
         # self.remove_geoms()
         size_dict = {}
@@ -1340,7 +1324,13 @@ class SMPL_Robot:
             self.model_dirs.append(f"/tmp/smpl/{uuid.uuid4()}")
 
             self.skeleton = SkeletonMesh(self.model_dirs[-1])
-            zero_pose = torch.zeros((1, 72))
+            if self.smpl_model in  ["smpl"]:
+                zero_pose = torch.zeros((1, 72))
+            elif self.smpl_model in  ["smpl", "smplh", "smplx"]:
+                zero_pose = torch.zeros((1, 156))
+            elif self.smpl_model in  ["mano"]:
+                zero_pose = torch.zeros((1, 48))
+                
             if self.upright_start:
                 zero_pose[0, :3] = torch.tensor([1.2091996, 1.2091996, 1.2091996])
             (
@@ -1355,10 +1345,7 @@ class SMPL_Robot:
                 joint_range,
                 contype,
                 conaffinity,
-            ) = (smpl_parser.get_mesh_offsets(
-                zero_pose=zero_pose, betas=self.beta, flatfoot=self.flatfoot)
-                 if self.smpl_model != "smplx" else
-                 smpl_parser.get_mesh_offsets(v_template=v_template))
+            ) = (smpl_parser.get_mesh_offsets(zero_pose=zero_pose, betas=self.beta, flatfoot=self.flatfoot) )
 
             if self.rel_joint_lm:
                 if self.upright_start:
@@ -1394,6 +1381,7 @@ class SMPL_Robot:
                 joint_axes,
                 joint_dofs,
                 joint_range,
+                sim=self.sim, 
                 upright_start=self.upright_start,
                 hull_dict = self.hull_dict,
                 create_vel_sensors = self.create_vel_sensors, 
@@ -1458,6 +1446,7 @@ class SMPL_Robot:
                                             joint_range,
                                             self.hull_dict, {},
                                             channels, {},
+                                            sim = self.sim, 
                                             upright_start=self.upright_start,
                                             remove_toe=self.remove_toe,
                                             freeze_hand = self.freeze_hand, 
@@ -1500,9 +1489,6 @@ class SMPL_Robot:
         self.param_names = self.get_params(get_name=True)
         self.init_params = self.get_params()
         self.init_tree = deepcopy(self.tree)
-        if self.masterfoot:
-            # self.add_masterfoot_capsule()
-            self.add_masterfoot_box()
 
         all_root = self.tree.getroot()
 
@@ -1583,454 +1569,6 @@ class SMPL_Robot:
         for body in self.bodies:
             # body.reindex()
             body.sync_node()
-
-    def add_masterfoot_box(self):
-        self.joint_range_master = {
-            "L_Toe_x": f"-0.1 0.1",
-            "L_Toe_y": f"-45.0 45",
-            "L_Toe_z": f"-10 10",
-            "R_Toe_x": f"-0.1 0.1",
-            "R_Toe_y": f"-45 45",
-            "R_Toe_z": f"-10 10",
-            "L_Toe_1_joint_0": f"-0.1 0.1",
-            "L_Toe_1_joint_1": f"-45 45",
-            "L_Toe_1_joint_2": f"-10 10",
-            "R_Toe_1_joint_0": f"-0.1 0.1",
-            "R_Toe_1_joint_1": f"-45 45",
-            "R_Toe_1_joint_2": f"-10 10",
-            "L_Toe_1_1_joint_0": f"-0.1 0.1",
-            "L_Toe_1_1_joint_1": f"-45 45",
-            "L_Toe_1_1_joint_2": f"-10 10",
-            "R_Toe_1_1_joint_0": f"-0.1 0.1",
-            "R_Toe_1_1_joint_1": f"-45 45",
-            "R_Toe_1_1_joint_2": f"-10 10",
-            "L_Toe_2_joint_0": f"-0.1 0.1",
-            "L_Toe_2_joint_1": f"-45 45",
-            "L_Toe_2_joint_2": f"-10 10",
-            "R_Toe_2_joint_0": f"-0.1 0.1",
-            "R_Toe_2_joint_1": f"-45 45",
-            "R_Toe_2_joint_2": f"-10 10",
-        }
-        body_index = [3, 7]
-
-        yellow_bone_length = 0.02
-        yellow_toe_back = -0.02
-        for idx in body_index:
-            ankle2clone = body_ankle = self.bodies[idx]
-            ankle_node = body_ankle.node
-            flip_y = -1 if idx == 3 else 1
-
-            for element in ankle_node.getiterator(): # remvoe the geom of the ankle
-                if element.tag == "geom":
-                    ankle_node.remove(element)
-                    break
-
-            child_pos = body_ankle.child[0].pos - body_ankle.pos
-            body_ankle.geoms = [] # remove Ankel's original geom
-            toe_x, toe_y, toe_z = child_pos
-            ankles_zs, ankle_xs = self.hull_dict[body_ankle.name]['norm_verts'][:, 2], self.hull_dict[body_ankle.name]['norm_verts'][:, 0]
-            ankle_y_max, ankle_y_min = self.hull_dict[body_ankle.name]['norm_verts'][:, 1].max(), self.hull_dict[body_ankle.name]['norm_verts'][:, 1].min()
-            ankle_z_max, ankle_z_min = ankles_zs.max(), ankles_zs.min()
-            toe_y_max, toe_y_min = self.hull_dict[body_ankle.name]['norm_verts'][:, 1].max(), self.hull_dict[body_ankle.name]['norm_verts'][:, 1].min()
-            ankle_z_max_x = self.hull_dict[body_ankle.name]['norm_verts'][ankles_zs.argmax(), 0]
-            if idx == 7:
-                ankle_y_tgt, ankle_y_green = ankle_y_max, ankle_y_min
-            else:
-                ankle_y_tgt, ankle_y_green = ankle_y_min, ankle_y_max
-
-            ankle_size = np.abs(toe_z - ankles_zs.min())
-
-            ankle_z_min_neg = ankles_zs[ankle_xs < 0].min()
-            ankle_z_span = ankle_z_max - ankle_z_min_neg
-            ankle_y_span = ankle_y_max - ankle_y_min
-            ankle_frac = 10
-            green_y = (toe_y + ankle_y_tgt)/2 - ankle_y_span * 2/5 * flip_y
-
-            attributes = {
-                "size": f"{ankle_size}",
-                "type": "box",
-                "pos":
-                f"{(toe_x + yellow_toe_back)/2 - (toe_x - yellow_toe_back)/4} {(green_y + ankle_y_tgt)/2 } {ankle_z_min_neg + ankle_z_span * 9/ankle_frac /2}",
-                "size":
-                f"{(toe_x - yellow_toe_back)/4} {np.abs((ankle_y_tgt - green_y)/2)} {ankle_z_span * 9 / ankle_frac /2}",
-                "quat": f"0 0 0 1",
-                "contype": "0",
-                "conaffinity": "1",
-            }
-            geom_node = SubElement(ankle_node, "geom", attributes)
-            body_ankle.geoms.append(Geom(geom_node, body_ankle))
-
-            attributes = {
-                "type": "box",
-                "pos":
-                f"{(toe_x + yellow_toe_back)/2 + (toe_x - yellow_toe_back)/4} {(green_y + ankle_y_tgt)/2 } {ankle_z_min_neg + ankle_z_span * 6/ankle_frac /2}",
-                "size":
-                f"{(toe_x - yellow_toe_back)/4} {np.abs((ankle_y_tgt - green_y)/2)} {ankle_z_span * 6 / ankle_frac /2}",
-                "quat": f"0 0 0 1",
-                "contype": "0",
-                "conaffinity": "1",
-            }
-            geom_node = SubElement(ankle_node, "geom", attributes)
-            body_ankle.geoms.append(Geom(geom_node, body_ankle))
-
-
-            ############################################################ Nodes for red toes
-            body_toe = body_ankle.child[0]
-            body_toe_node = body_toe.node
-            for element in body_toe_node.getiterator(): # remvoe the geom of the ankle
-                if element.tag == "geom":
-                    body_toe_node.remove(element)
-                elif element.tag == "joint":
-                    master_range = self.cfg.get("master_range", 30)
-                    element.attrib["range"] = self.joint_range_master.get(element.attrib["name"],  f"-{master_range} {master_range}")
-
-
-            toe_x_max, toe_x_min = self.hull_dict[body_toe.name]['norm_verts'][:, 0].max(), self.hull_dict[body_toe.name]['norm_verts'][:, 0].min()
-            # toe_y_max, toe_y_min = self.hull_dict[body_toe.name]['norm_verts'][:, 1].max(), self.hull_dict[body_toe.name]['norm_verts'][:, 1].min()
-            # toe_z_max, toe_z_min = self.hull_dict[body_toe.name]['norm_verts'][:, 2].max(), self.hull_dict[body_toe.name]['norm_verts'][:, 2].min()
-
-            attributes = {
-                "type": "box",
-                "pos":
-                f"{(toe_x_max)/4} {(green_y + ankle_y_tgt)/2  - toe_y} {ankle_z_min_neg + ankle_z_span * 4/ankle_frac /2- toe_z}",
-                "size":
-                f"{(toe_x_max)/4} {np.abs((ankle_y_tgt - green_y)/2)} {ankle_z_span * 4 / ankle_frac /2}",
-                "quat": f"0 0 0 1",
-                "contype": "0",
-                "conaffinity": "1",
-            }
-            geom_node = SubElement(body_toe_node, "geom", attributes)
-            body_toe.geoms.append(Geom(geom_node, body_toe))
-
-            attributes = {
-                "type": "box",
-                "pos":
-                f"{(toe_x_max) * 3/4 } {(green_y + ankle_y_tgt)/2  - toe_y} {ankle_z_min_neg + ankle_z_span * 2/ankle_frac /2- toe_z}",
-                "size":
-                f"{(toe_x_max)/4} {np.abs((ankle_y_tgt - green_y)/2)} {ankle_z_span * 2 / ankle_frac /2}",
-                "quat": f"0 0 0 1",
-                "contype": "0",
-                "conaffinity": "1",
-            }
-            geom_node = SubElement(body_toe_node, "geom", attributes)
-            body_toe.geoms.append(Geom(geom_node, body_toe))
-
-            # #################################### First additional toe (green one)
-            green_z = ankle_z_max - ankle_size - ankle_z_span * 4 / ankle_frac
-            toe_y_max, toe_y_min = self.hull_dict[body_toe.name]['norm_verts'][:, 1].max(), self.hull_dict[body_toe.name]['norm_verts'][:, 1].min()
-            pos = np.array([yellow_bone_length, green_y, green_z])
-
-
-            green_toe_body = self.add_body_joint_and_actuator(body_ankle, body_toe, pos, index_name = "_1")
-            attributes = {
-                "type": "box",
-                "pos":
-                f"{(toe_x - yellow_bone_length)/2 } {  (ankle_y_green - green_y)/2 } {ankle_z_min_neg + ankle_z_span * 5/ankle_frac /2 - green_z}",
-                "size":
-                f"{np.abs(toe_x - yellow_bone_length)/2} {np.abs(green_y - ankle_y_green)/2} {ankle_z_span * 5 / ankle_frac /2}",
-                "quat": f"0 0 0 1",
-                "contype": "0",
-                "conaffinity": "1",
-            }
-            geom_node = SubElement(green_toe_body.node, "geom", attributes)
-            green_toe_body.geoms.append(Geom(geom_node, green_toe_body))
-
-            # #################################### Second additional toe (white one)
-            pos = np.array([toe_x - yellow_bone_length, 0, toe_z - green_z])
-            white_toe_body = self.add_body_joint_and_actuator(green_toe_body,
-                                                          green_toe_body,
-                                                          pos,
-                                                          index_name="_1")
-
-            attributes = {
-                "type": "box",
-                "pos":
-                f"{(toe_x_max  ) * 2/5} {  (ankle_y_green - green_y)/2 } {ankle_z_min_neg + ankle_z_span * 2 /ankle_frac /2- toe_z}",
-                "size":
-                f"{(toe_x_max ) * 2/5} {np.abs(green_y - ankle_y_green)/2} {ankle_z_span * 2 / ankle_frac /2}",
-                "quat": f"0 0 0 1",
-                "contype": "0",
-                "conaffinity": "1",
-            }
-            geom_node = SubElement(white_toe_body.node, "geom", attributes)
-            white_toe_body.geoms.append(Geom(geom_node, white_toe_body))
-
-
-            #################################### Third additional toe (white one)
-            ankle_x_min = self.hull_dict[body_ankle.name]['norm_verts'][:, 0].min()
-            pos = np.array(
-                [yellow_toe_back, (green_y + ankle_y_tgt) / 2 , toe_z])
-
-            while_toe_body = self.add_body_joint_and_actuator(body_ankle, body_toe, pos, index_name = "_2")
-            attributes = {
-                "type": "box",
-                "pos":
-                f"{(ankle_x_min - yellow_toe_back)/2} {0} {ankle_z_min_neg + ankle_z_span * 7 /ankle_frac /2- toe_z}",
-                "size":
-                f"{np.abs(ankle_x_min - yellow_toe_back)/2} {np.abs((ankle_y_tgt - green_y)/2)} {ankle_z_span * 7 / ankle_frac /2}",
-                "quat": f"0 0 0 1",
-                "contype": "0",
-                "conaffinity": "1",
-            }
-            geom_node = SubElement(while_toe_body.node, "geom", attributes)
-            while_toe_body.geoms.append(Geom(geom_node, while_toe_body))
-
-
-
-
-        self.init_tree = deepcopy(self.tree)
-
-
-    def add_masterfoot_capsule(self):
-        masterfoot_v = self.cfg.get("masterfoot_v", 0)
-        body_index = [3, 7]
-        self.joint_range_master = {"L_Toe_x": f"-0.1 0.1", "L_Toe_y": f"-45 45", "L_Toe_z": f"-10 10"}
-        yellow_bone_length = 0.04
-        yellow_toe_back = -0.02
-        for idx in body_index:
-            ankle2clone = body_ankle = self.bodies[idx]
-            ankle_node = body_ankle.node
-            flip_y = -1 if idx == 3 else 1
-
-            for element in ankle_node.getiterator(): # remvoe the geom of the ankle
-                if element.tag == "geom":
-                    ankle_node.remove(element)
-                    break
-            child_pos = body_ankle.child[0].pos - body_ankle.pos
-            body_ankle.geoms = [] # remove Ankel's original geom
-            toe_x, toe_y, toe_z = child_pos
-
-            ankle_y_max, ankle_y_min = self.hull_dict[body_ankle.name]['norm_verts'][:, 1].max(), self.hull_dict[body_ankle.name]['norm_verts'][:, 1].min()
-            ankle_z_max, ankle_z_min = self.hull_dict[body_ankle.name]['norm_verts'][:, 2].max(), self.hull_dict[body_ankle.name]['norm_verts'][:, 2].min()
-            toe_y_max, toe_y_min = self.hull_dict[body_ankle.name]['norm_verts'][:, 1].max(), self.hull_dict[body_ankle.name]['norm_verts'][:, 1].min()
-            ankle_z_max_x = self.hull_dict[body_ankle.name]['norm_verts'][self.hull_dict[body_ankle.name]['norm_verts'][:, 2].argmax(), 0]
-            if idx == 7:
-                ankle_y_tgt = ankle_y_max
-            else:
-                ankle_y_tgt = ankle_y_min
-
-            ankle_size = np.abs(toe_z - self.hull_dict[body_ankle.name]['norm_verts'][:, 2].min())
-            ankle_z_span = ankle_z_max - ankle_z_min
-            ankle_frac = 10
-
-            attributes = {
-                "size": f"{ankle_size}",
-                "type": "capsule",
-                "fromto":
-                f"{ankle_z_max_x} {toe_y } {ankle_z_max - ankle_size - ankle_z_span * 2/ankle_frac} {toe_x} {toe_y } {toe_z}",
-                "contype": "0",
-                "conaffinity": "1",
-            }
-            geom_node = SubElement(ankle_node, "geom", attributes)
-            body_ankle.geoms.append(Geom(geom_node, body_ankle))
-
-            attributes = {
-                "size": f"{ankle_size}",
-                "type": "capsule",
-                "fromto":
-                f"{ankle_z_max_x} {(toe_y + ankle_y_tgt)/2} {ankle_z_max - ankle_size- ankle_z_span * 1/ankle_frac} {toe_x} {(toe_y + ankle_y_tgt)/2} {toe_z}",
-                "contype": "0",
-                "conaffinity": "1",
-            }
-            geom_node = SubElement(ankle_node, "geom", attributes)
-            body_ankle.geoms.append(Geom(geom_node, body_ankle))
-
-            attributes = {
-                "size": f"{ankle_size}",
-                "type": "capsule",
-                "fromto":
-                f"{ankle_z_max_x} {ankle_y_tgt} {ankle_z_max - ankle_size- ankle_z_span * 0/ankle_frac} {toe_x} {ankle_y_tgt} {toe_z}",
-                "contype": "0",
-                "conaffinity": "1",
-            }
-            geom_node = SubElement(ankle_node, "geom", attributes)
-            body_ankle.geoms.append(Geom(geom_node, body_ankle))
-
-            ########################################################################
-            attributes = {
-                "size": f"{ankle_size}",
-                "type": "capsule",
-                "fromto":
-                f"{ankle_z_max_x} {toe_y} {ankle_z_max - ankle_size- ankle_z_span * 2/ankle_frac} {yellow_toe_back} {(toe_y + ankle_y_tgt)/2} {toe_z}",
-                "contype": "0",
-                "conaffinity": "1",
-            }
-            geom_node = SubElement(ankle_node, "geom", attributes)
-            body_ankle.geoms.append(Geom(geom_node, body_ankle))
-
-            attributes = {
-                "size": f"{ankle_size}",
-                "type": "capsule",
-                "fromto":
-                f"{ankle_z_max_x} {(toe_y + ankle_y_tgt)/2} {ankle_z_max - ankle_size- ankle_z_span * 1/ankle_frac} {yellow_toe_back} {(toe_y + ankle_y_tgt)/2} {toe_z}",
-                "contype": "0",
-                "conaffinity": "1",
-            }
-            geom_node = SubElement(ankle_node, "geom", attributes)
-            body_ankle.geoms.append(Geom(geom_node, body_ankle))
-
-            attributes = {
-                "size": f"{ankle_size}",
-                "type": "capsule",
-                "fromto":
-                f"{ankle_z_max_x} {ankle_y_tgt} {ankle_z_max - ankle_size- ankle_z_span * 0/ankle_frac} {yellow_toe_back} {(toe_y + ankle_y_tgt)/2} {toe_z}",
-                "contype": "0",
-                "conaffinity": "1",
-            }
-            geom_node = SubElement(ankle_node, "geom", attributes)
-            body_ankle.geoms.append(Geom(geom_node, body_ankle))
-
-            ############################################################
-            green_z = ankle_z_max - ankle_size - ankle_z_span * 4/ankle_frac
-
-            attributes = {
-                "size": f"{ankle_size}",
-                "type": "capsule",
-                "fromto":
-                f"{yellow_bone_length} {(toe_y + ankle_y_tgt)/2 - 0.05 * flip_y} {green_z} {yellow_toe_back} {(toe_y + ankle_y_tgt)/2} {toe_z}",
-                "contype": "0",
-                "conaffinity": "1",
-            }
-            geom_node = SubElement(ankle_node, "geom", attributes)
-            body_ankle.geoms.append(Geom(geom_node, body_ankle))
-
-
-            ############################################################ Nodes for red toes
-            body_toe = body_ankle.child[0]
-            body_toe_node = body_toe.node
-            for element in body_toe_node.getiterator(): # remvoe the geom of the toe
-                if element.tag == "geom":
-                    body_toe_node.remove(element)
-                elif element.tag == "joint":
-                    master_range = self.cfg.get("master_range", 30)
-                    element.attrib["range"] = self.joint_range_master.get(element.attrib["name"],  f"-{master_range} {master_range}")
-                    print(element.attrib["range"])
-
-            toe_x_max = self.hull_dict[body_toe.name]['norm_verts'][:, 0].max()
-            toe_z_min_abs = np.abs(self.hull_dict[body_toe.name]['norm_verts'][:, 2].min())
-
-            attributes = {
-                "size": f"{toe_z_min_abs}",
-                "type": "capsule",
-                "fromto": f"{0.0} {0} {0} {toe_x_max} {0} {0}",
-                "contype": "0",
-                "conaffinity": "1",
-            }
-            geom_node = SubElement(body_toe_node, "geom", attributes)
-            body_toe.geoms.append(Geom(geom_node, body_toe))
-
-            attributes = {
-                "size": f"{toe_z_min_abs}",
-                "type": "capsule",
-                "fromto":
-                f"{0.0} {(toe_y + ankle_y_tgt)/2 - toe_y} {0} {toe_x_max} {(toe_y + ankle_y_tgt)/2- toe_y} {0}",
-                "contype": "0",
-                "conaffinity": "1",
-            }
-            geom_node = SubElement(body_toe_node, "geom", attributes)
-            body_toe.geoms.append(Geom(geom_node, body_toe))
-
-            attributes = {
-                "size": f"{toe_z_min_abs}",
-                "type": "capsule",
-                "fromto":
-                f"{0.0} {ankle_y_tgt- toe_y} {0} {toe_x_max} {ankle_y_tgt- toe_y} {0}",
-                "contype": "0",
-                "conaffinity": "1",
-            }
-            geom_node = SubElement(body_toe_node, "geom", attributes)
-            body_toe.geoms.append(Geom(geom_node, body_toe))
-
-
-            #################################### First additional toe (green one)
-            toe_y_max, toe_y_min = self.hull_dict[body_toe.name]['norm_verts'][:, 1].max(), self.hull_dict[body_toe.name]['norm_verts'][:, 1].min()
-            if idx == 7:
-                toe_y_tgt = toe_y_min + toe_z_min_abs
-            else:
-                toe_y_tgt = toe_y_max - toe_z_min_abs
-
-            pos = np.array([yellow_bone_length, (toe_y + ankle_y_tgt)/2 - 0.05 * flip_y, green_z])
-            green_toe_body = self.add_body_joint_and_actuator(body_ankle, body_toe, pos, index_name = "_1")
-            attributes = {
-                "size": f"{toe_z_min_abs}",
-                "type": "capsule",
-                "fromto":
-                f"{0} {0} {0} {toe_x - yellow_bone_length} {0} {toe_z - green_z }",
-                "contype": "0",
-                "conaffinity": "1",
-            }
-            geom_node = SubElement(green_toe_body.node, "geom", attributes)
-            green_toe_body.geoms.append(Geom(geom_node, green_toe_body))
-            attributes = {
-                "size": f"{toe_z_min_abs}",
-                "type": "capsule",
-                "fromto":
-                f"{0} {toe_y_tgt + toe_z_min_abs * flip_y} {toe_z - green_z} {toe_x - yellow_bone_length} {toe_y_tgt + toe_z_min_abs* flip_y} {toe_z - green_z}",
-                "contype": "0",
-                "conaffinity": "1",
-            }
-            geom_node = SubElement(green_toe_body.node, "geom", attributes)
-            green_toe_body.geoms.append(Geom(geom_node, green_toe_body))
-
-            #################################### Second additional toe (white one)
-            pos = np.array([toe_x - yellow_bone_length, 0, toe_z - green_z])
-            white_toe_body = self.add_body_joint_and_actuator(green_toe_body,
-                                                          green_toe_body,
-                                                          pos,
-                                                          index_name="_1")
-
-            attributes = {
-                "size": f"{toe_z_min_abs}",
-                "type": "capsule",
-                "fromto":
-                f"{0} {0} {0} {np.abs((toe_x_max - toe_x) * 3/4) } {0} {0}",
-                "contype": "0",
-                "conaffinity": "1",
-            }
-            geom_node = SubElement(white_toe_body.node, "geom", attributes)
-            white_toe_body.geoms.append(Geom(geom_node, white_toe_body))
-
-            attributes = {
-                "size": f"{toe_z_min_abs }",
-                "type": "capsule",
-                "fromto":
-                f"{0} {toe_y_tgt + toe_z_min_abs * flip_y} {0} {np.abs((toe_x_max - toe_x) * 3/4) } {toe_y_tgt + toe_z_min_abs * flip_y} {0}",
-                "contype": "0",
-                "conaffinity": "1",
-            }
-            geom_node = SubElement(white_toe_body.node, "geom", attributes)
-            white_toe_body.geoms.append(Geom(geom_node, white_toe_body))
-
-            #################################### Third additional toe (white one)
-            ankle_x_min = self.hull_dict[body_ankle.name]['norm_verts'][:, 0].min()
-            pos = np.array([yellow_toe_back, (toe_y + ankle_y_tgt)/2, toe_z])
-
-            while_toe_body = self.add_body_joint_and_actuator(body_ankle, body_toe, pos, index_name = "_2")
-            attributes = {
-                "size": f"{toe_z_min_abs}",
-                "type": "capsule",
-                "fromto":
-                f"{0} {toe_z_min_abs} {0} {ankle_x_min - yellow_toe_back + toe_z_min_abs} {toe_z_min_abs} {0}",
-                "contype": "0",
-                "conaffinity": "1",
-            }
-            geom_node = SubElement(while_toe_body.node, "geom", attributes)
-            while_toe_body.geoms.append(Geom(geom_node, while_toe_body))
-
-
-            attributes = {
-                "size": f"{toe_z_min_abs}",
-                "type": "capsule",
-                "fromto":
-                f"{0} {-toe_z_min_abs} {0} {ankle_x_min - yellow_toe_back + toe_z_min_abs} {-toe_z_min_abs} {0}",
-                "contype": "0",
-                "conaffinity": "1",
-            }
-            geom_node = SubElement(while_toe_body.node, "geom", attributes)
-            while_toe_body.geoms.append(Geom(geom_node, while_toe_body))
-
-
-        self.init_tree = deepcopy(self.tree)
 
     def add_body_joint_and_actuator(self, parent_body, body, pos, index_name = "_1"):
         body_node =body.node
@@ -2413,25 +1951,24 @@ if __name__ == "__main__":
         "real_weight_porpotion_capsules": True,
         "real_weight_porpotion_boxes": True,
         "replace_feet": True,
-        "masterfoot": False,
         "big_ankle": True,
         "freeze_hand": False, 
         "box_body": True,
-        "master_range": 50,
         "model": "smpl",
         "body_params": {},
         "joint_params": {},
         "geom_params": {},
         "actuator_params": {},
-        "model": "smpl",
+        "model": "smplx",
         "ball_joint": False, 
         "create_vel_sensors": False, # Create global and local velocities sensors. 
+        "sim": "isaacgym"
     }
     smpl_robot = SMPL_Robot(robot_cfg)
     params_names = smpl_robot.get_params(get_name=True)
 
     betas = torch.zeros(1, 16)
-    # betas[]
+    betas[0] = 1
     gender = [0]
     t0 = time.time()
     params = smpl_robot.get_params()
@@ -2439,11 +1976,13 @@ if __name__ == "__main__":
     smpl_robot.load_from_skeleton(betas=betas, objs_info=None, gender=gender)
     print(smpl_robot.height)
     smpl_robot.write_xml(f"test.xml")
-    smpl_robot.write_xml(f"/tmp/smpl_humanoid.xml")
-    m = mujoco.MjModel.from_xml_path(f"/tmp/smpl_humanoid.xml")
-    d = mujoco.MjData(m)
+    smpl_robot.write_xml(f"/tmp/smpl/{robot_cfg['model']}_{gender[0]}_humanoid.xml")
+    mj_model = mujoco.MjModel.from_xml_path(f"/tmp/smpl/{robot_cfg['model']}_{gender[0]}_humanoid.xml")
+    mj_data = mujoco.MjData(mj_model)
+    
+    mj_data.qpos[2] = 0.95
 
-    with mujoco.viewer.launch_passive(m, d) as viewer:
+    with mujoco.viewer.launch_passive(mj_model, mj_data) as viewer:
         # Close the viewer automatically after 30 wall-seconds.
         start = time.time()
         while viewer.is_running() :
@@ -2451,17 +1990,17 @@ if __name__ == "__main__":
 
             # mj_step can be replaced with code that also evaluates
             # a policy and applies a control signal before stepping the physics.
-            mujoco.mj_step(m, d)
+            mujoco.mj_forward(mj_model, mj_data)
             
 
             # Example modification of a viewer option: toggle contact points every two seconds.
             with viewer.lock():
-                viewer.opt.flags[mujoco.mjtVisFlag.mjVIS_CONTACTPOINT] = int(d.time % 2)
+                viewer.opt.flags[mujoco.mjtVisFlag.mjVIS_CONTACTPOINT] = int(mj_data.time % 2)
 
             # Pick up changes to the physics state, apply perturbations, update options from GUI.
             viewer.sync()
 
             # Rudimentary time keeping, will drift relative to wall clock.
-            time_until_next_step = m.opt.timestep - (time.time() - step_start)
+            time_until_next_step = mj_model.opt.timestep - (time.time() - step_start)
             if time_until_next_step > 0:
                 time.sleep(time_until_next_step)
