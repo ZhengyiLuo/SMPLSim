@@ -497,7 +497,7 @@ class Skeleton:
                     if self.sim in ["mujoco"]:
                         j_attr["user"] = " ".join([ str(s) for s in GAINS_MJ[bone.name]]) # using user to set the max torque
                         j_attr["armature"] = "0.01"
-                        # j_attr["damping"] = str(GAINS_MJ[bone.name][1])
+                        j_attr["damping"] = str(GAINS_MJ[bone.name][1])
                     elif self.sim in ["isaacgym"]:
                         j_attr["stiffness"] = str(GAINS_PHC[bone.name][0])
                         j_attr["damping"] = str(GAINS_PHC[bone.name][1])
