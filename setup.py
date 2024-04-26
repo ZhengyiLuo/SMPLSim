@@ -10,7 +10,6 @@ setup(
     name='smpl_sim',
     version='0.1',
     packages=find_packages(),
-    include_package_data=True,
     package_data={
         # Include any *.txt files found in the 'your_package' package
         'smpl_sim': ['*.xml', '*.urdf', "*.yaml" ],

@@ -1,5 +1,5 @@
 include LICENSE
 include README.md
-recursive-include package_name *.py
-recursive-include package_name/utils *.py
-recursive-include package_name/data *.py
+recursive-include smpl_sim *.py
+recursive-include smpl_sim/utils *.py
+recursive-include smpl_sim/data *.yaml *.urdf *.xml
