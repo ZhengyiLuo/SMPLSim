@@ -4,3 +4,6 @@ ERROR: could not initialize GLFW
 Mon Feb 19 20:01:16 2024
 WARNING: mju_openResource: unknown file 'tmp/smpl_humanoid.xml'
 
+Sat Mar  2 18:16:01 2024
+ERROR: could not initialize GLFW
+

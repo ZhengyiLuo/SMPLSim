@@ -11,7 +11,64 @@ try:
 except ImportError:
     from importlib.resources import files
 
-GAINS = {
+GAINS_PHC = {
+    "L_Hip": [800, 80, 1, 500],
+    "L_Knee": [800, 80, 1, 500],
+    "L_Ankle": [800, 80, 1, 500],
+    "L_Toe": [500, 50, 1, 500],
+    "R_Hip": [800, 80, 1, 500],
+    "R_Knee": [800, 80, 1, 500],
+    "R_Ankle": [800, 80, 1, 500],
+    "R_Toe": [500, 50, 1, 500],
+    "Torso": [1000, 100, 1, 500],
+    "Spine": [1000, 100, 1, 500],
+    "Chest": [1000, 100, 1, 500],
+    "Neck": [500, 50, 1, 250],
+    "Head": [500, 50, 1, 250],
+    "L_Thorax": [500, 50, 1, 500],
+    "L_Shoulder": [500, 50, 1, 500],
+    "L_Elbow": [500, 50, 1, 150],
+    "L_Wrist": [300, 30, 1, 150],
+    "L_Hand": [300, 30, 1, 150],
+    "R_Thorax": [500, 50, 1, 150],
+    "R_Shoulder": [500, 50, 1, 250],
+    "R_Elbow": [500, 50, 1, 150],
+    "R_Wrist": [300, 30, 1, 150],
+    "R_Hand": [300, 30, 1, 150],
+    
+    "L_Index1": [100, 10, 1, 150],
+    "L_Index2": [100, 10, 1, 150],
+    "L_Index3": [100, 10, 1, 150],
+    "L_Middle1": [100, 10, 1, 150],
+    "L_Middle2": [100, 10, 1, 150],
+    "L_Middle3": [100, 10, 1, 150],
+    "L_Pinky1": [100, 10, 1, 150],
+    "L_Pinky2": [100, 10, 1, 150],
+    "L_Pinky3": [100, 10, 1, 150],
+    "L_Ring1": [100, 10, 1, 150],
+    "L_Ring2": [100, 10, 1, 150],
+    "L_Ring3": [100, 10, 1, 150],
+    "L_Thumb1": [100, 10, 1, 150],
+    "L_Thumb2": [100, 10, 1, 150],
+    "L_Thumb3": [100, 10, 1, 150],
+    "R_Index1": [100, 10, 1, 150],
+    "R_Index2": [100, 10, 1, 150],
+    "R_Index3": [100, 10, 1, 150],
+    "R_Middle1": [100, 10, 1, 150],
+    "R_Middle2": [100, 10, 1, 150],
+    "R_Middle3": [100, 10, 1, 150],
+    "R_Pinky1": [100, 10, 1, 150],
+    "R_Pinky2": [100, 10, 1, 150],
+    "R_Pinky3": [100, 10, 1, 150],
+    "R_Ring1": [100, 10, 1, 150],
+    "R_Ring2": [100, 10, 1, 150],
+    "R_Ring3": [100, 10, 1, 150],
+    "R_Thumb1": [100, 10, 1, 150],
+    "R_Thumb2": [100, 10, 1, 150],
+    "R_Thumb3": [100, 10, 1, 150],
+}
+
+GAINS_MJ = {
     "L_Hip": [800, 80, 1, 500],
     "L_Knee": [800, 80, 1, 500],
     "L_Ankle": [800, 80, 1, 500],
@@ -124,6 +181,7 @@ class Skeleton:
         scale,
         equalities,
         hull_dict,
+        sim="mujoco",
         exclude_contacts=None,
         collision_groups=None,
         conaffinity=None,
@@ -148,6 +206,7 @@ class Skeleton:
         self.hull_dict = hull_dict
         self.upright_start = upright_start
         self.create_vel_sensors = create_vel_sensors
+        self.sim = sim
 
         for group, bones in collision_groups.items():
             for bone in bones:
@@ -263,20 +322,11 @@ class Skeleton:
         # create meshes
         asset = tree.getroot().find("asset")
         # ZL: Isaac version
-        # for bone in self.bones:
-        #     if os.path.exists(f"{self.model_dir}/geom/{bone.name}.stl"):
-        #         attr = {
-        #             "file":
-        #             f"{self.model_dir.split('/')[-1]}/geom/{bone.name}.stl",
-        #             "name": f"{bone.name}_mesh"
-        #         }
-        #         # geom_relative_path = f'../mesh/smpl/{self.model_dir.split("/")[-1]}'
-        #         # attr = {"file": f"{geom_relative_path}/geom/{bone.name}.stl", "name": f"{bone.name}_mesh"}
-        #         SubElement(asset, "mesh", attr)
         for bone in self.bones:
             if os.path.exists(f"{self.model_dir}/geom/{bone.name}.stl"):
-                attr = {"file": f"{self.model_dir}/geom/{bone.name}.stl"}
+                attr = {"file": f"{self.model_dir.split('/')[-1]}/geom/{bone.name}.stl", "name": f"{bone.name}_mesh"}
                 SubElement(asset, "mesh", attr)
+     
 
         # create actuators
         actuators = tree.getroot().find("actuator")
@@ -335,8 +385,8 @@ class Skeleton:
         attr = dict()
         attr["name"] = bone.name
         attr["pos"] = "{0:.4f} {1:.4f} {2:.4f}".format(*(bone.pos + offset))
-        quat = quaternion_from_matrix(bone.orient)
-        attr["quat"] = "{0:.4f} {1:.4f} {2:.4f} {3:.4f}".format(*quat)
+        # quat = quaternion_from_matrix(bone.orient)
+        # attr["quat"] = "{0:.4f} {1:.4f} {2:.4f} {3:.4f}".format(*quat)
         node = SubElement(parent_node, "body", attr)
 
         # write joints
@@ -367,9 +417,17 @@ class Skeleton:
                 # j_attr["stiffness"] = str(GAINS[bone.name][0])
                 # j_attr["damping"] = str(GAINS[bone.name][1])
                 # j_attr["frictionloss"] = "0"
-
-                j_attr["user"] = " ".join([ str(s) for s in GAINS[bone.name]]) # using user to set the max torque
-                j_attr["armature"] = "0.01"
+                
+                if self.sim in ["mujoco"]:
+                    j_attr["user"] = " ".join([ str(s) for s in GAINS_MJ[bone.name]]) # using user to set the max torque
+                    j_attr["armature"] = "0.01"
+                elif self.sim in ["isaacgym"]:
+                    j_attr["stiffness"] = str(GAINS_PHC[bone.name][0])
+                    j_attr["damping"] = str(GAINS_PHC[bone.name][1])
+                    if bone.name in ["L_Ankle", "R_Ankle"]:
+                        j_attr["armature"] = "0.01"
+                    else:
+                        j_attr["armature"] = "0.02"
 
                 if i < len(bone.lb):
                     j_attr["range"] = "{0:.4f} {1:.4f}".format(
@@ -378,6 +436,7 @@ class Skeleton:
                     j_attr["range"] = "-180.0 180.0"
                 if j_attr["name"] in ref_angles.keys():
                     j_attr["ref"] = f"{ref_angles[j_attr['name']]:.1f}"
+                
                 SubElement(node, "joint", j_attr)
 
         # write sites
@@ -391,18 +450,13 @@ class Skeleton:
 
         geom_path = f"{self.model_dir}/geom/{bone.name}.stl"
         if os.path.exists(geom_path):
-            # g_attr = {"type": "mesh", "mesh": f"{bone.name}_mesh"} # Isaac version
-            g_attr = {"type": "mesh", "mesh": f"{bone.name}"}
+            g_attr = {"type": "mesh", "mesh": f"{bone.name}_mesh"} 
             if bone.name in self.collision_groups.keys():
                 g_attr["density"] = str(base_density)
 
                 g_attr["contype"] = str(self.collision_groups[bone.name])
                 g_attr["conaffinity"] = str(self.conaffinity[bone.name])
 
-                # g_attr["solimp"] = "0.9 0.95 0.001 0.5 2"
-                # g_attr["solref"] = "0.02 1"
-                # g_attr["size"] = str(10)
-                # g_attr["friction"] = "0.000000000005 0.000000000005 0.1"
                 if not self.color_dict is None:
                     g_attr["rgba"] = self.color_dict[bone.name]
 
@@ -437,9 +491,8 @@ class Skeleton:
                     g_attr["type"] = "box"
                     g_attr["pos"] = "{0:.4f} {1:.4f} {2:.4f}".format(*pos)
                     g_attr["size"] = "{0:.4f} {1:.4f} {2:.4f}".format(*size)
-                    g_attr["quat"] = "{0:.4f} {1:.4f} {2:.4f} {3:.4f}".format(
-                        *rot)
-
+                    g_attr["quat"] = "{0:.4f} {1:.4f} {2:.4f} {3:.4f}".format(*rot)
+            
             SubElement(node, "geom", g_attr)
         else:
             for end in bone.ends:

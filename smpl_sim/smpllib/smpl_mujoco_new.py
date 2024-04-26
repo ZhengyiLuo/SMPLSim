@@ -7,7 +7,7 @@ from ..utils.torch_geometry_transforms import (
 )
 from .smpl_parser import SMPL_BONE_ORDER_NAMES, SMPLH_BONE_ORDER_NAMES
 from scipy.spatial.transform import Rotation as sRot
-from ..utils.transform_utils import rotation_matrix_to_angle_axis
+from smpl_sim.utils.torch_geometry_transforms import rotation_matrix_to_angle_axis
 import smpl_sim.utils.mujoco_utils as mj_utils
 
 
