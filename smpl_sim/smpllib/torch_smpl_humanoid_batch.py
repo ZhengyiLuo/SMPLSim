@@ -71,8 +71,8 @@ class Humanoid_Batch:
             self.bone_rodered_names = SMPLH_BONE_ORDER_NAMES
             
             
-        self.smpl_2_mujoco = [SMPL_BONE_ORDER_NAMES.index(i) for i in self.model_names] # Apply Mujoco order
-        self.mujoco_2_smpl = [self.model_names.index(i) for i in SMPL_BONE_ORDER_NAMES] # Apply Mujoco order
+        self.smpl_2_mujoco = [self.bone_rodered_names.index(i) for i in self.bone_mujoco_names] # Apply Mujoco order
+        self.mujoco_2_smpl = [self.bone_mujoco_names.index(i) for i in self.bone_rodered_names] # Apply Mujoco order
         self.num_joints = len(self._parents)
         self.dt = 1/30
         self.update_model(torch.zeros((1, 10)), torch.zeros((1))) # default gender 0 and pose 0. 
@@ -107,7 +107,7 @@ class Humanoid_Batch:
                 joint_offsets_all[n][gender == 1] = joint_offsets_m[n]
 
         off_sets = []
-        for n in self.model_names:
+        for n in self.bone_mujoco_names:
             off_sets.append(joint_offsets_all[n])
 
         # self._offsets = torch.from_numpy(np.stack(off_sets, axis=1))
@@ -379,4 +379,3 @@ if __name__ == "__main__":
     main()
 
  
-

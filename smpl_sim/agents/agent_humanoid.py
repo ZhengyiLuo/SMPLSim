@@ -180,18 +180,18 @@ class AgentHumanoid(AgentPPO):
         
 
         if not self.cfg.no_log:
-            wandb.log(
-                data={
+            log_data = {
                     "avg_episode_reward": loggers.avg_episode_reward,
                     "eps_len": loggers.avg_episode_len,
                     "avg_rwd": loggers.avg_reward,
                     "reward_raw": loggers.info_dict,
-                },
-                step=self.epoch,
-            )
-
+                }
+            
             if "log_eval" in info:
-                wandb.log(data=info["log_eval"], step=self.epoch)
+                log_data.update(info["log_eval"])
+            import ipdb; ipdb.set_trace()
+            wandb.log(data=log_data, step=self.epoch)
+
 
     def optimize_policy(self,save_model=True):
         starting_epoch = self.epoch
