@@ -262,7 +262,7 @@ class MotionLibBase():
 
     def update_sampling_prob(self, termination_history):
         print("------------------------------------------------------ Restoring Termination History ------------------------------------------------------")
-        if len(termination_history) == len(self._termination_history):
+        if len(self._sampling_prob) == len(self._termination_history):
             self._sampling_prob[:] = termination_history/termination_history.sum()
             self._termination_history = termination_history
             print("Successfully restored termination history")
