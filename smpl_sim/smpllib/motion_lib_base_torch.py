@@ -339,7 +339,7 @@ class MotionLibBase():
             self._sampling_prob = torch.ones(self._num_unique_motions).to(self._device) / self._num_unique_motions  # For use in sampling batches
 
     def update_sampling_prob(self, termination_history):
-        if len(termination_history) == len(self._termination_history):
+        if len(termination_history) == len(self._termination_history) and termination_history.sum() > 0:
             self._sampling_prob[:] = termination_history/termination_history.sum()
             self._termination_history = termination_history
             return True

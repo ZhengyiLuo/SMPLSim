@@ -180,22 +180,23 @@ class AgentHumanoid(AgentPPO):
         
 
         if not self.cfg.no_log:
-            wandb.log(
-                data={
+            log_data = {
                     "avg_episode_reward": loggers.avg_episode_reward,
                     "eps_len": loggers.avg_episode_len,
                     "avg_rwd": loggers.avg_reward,
                     "reward_raw": loggers.info_dict,
-                },
-                step=self.epoch,
-            )
-
+                }
+            
             if "log_eval" in info:
-                wandb.log(data=info["log_eval"], step=self.epoch)
+                log_data.update(info["log_eval"])
+            
+            wandb.log(data=log_data, step=self.epoch)
+
 
     def optimize_policy(self,save_model=True):
         starting_epoch = self.epoch
         for _ in range(starting_epoch, self.cfg.learning.max_epoch):
+            info = {}
             t0 = time.time()
             self.pre_epoch()
             batch, loggers = self.sample(self.cfg.learning.min_batch_size)
@@ -213,13 +214,12 @@ class AgentHumanoid(AgentPPO):
             elif save_model and (self.epoch) % self.cfg.learning.save_curr_frequency == 0:
                 self.save_curr()
             t2 = time.time()
-                
-            info = {
+            info.update({
                 "loggers": loggers,
                 "T_sample": t1 - t0,
                 "T_update": t2 - t1,
                 "T_total": t2 - t0,
-            }
+            })
                 
             self.log_train(info)
             self.after_epoch()
