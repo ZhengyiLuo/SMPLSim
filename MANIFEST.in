@@ -1,0 +1,5 @@
+include LICENSE
+include README.md
+recursive-include smpl_sim *.py
+recursive-include smpl_sim/utils *.py
+recursive-include smpl_sim/data *.yaml *.urdf *.xml
