@@ -1345,7 +1345,7 @@ class SMPL_Robot:
                 joint_range,
                 contype,
                 conaffinity,
-            ) = (smpl_parser.get_mesh_offsets(zero_pose=zero_pose, betas=self.beta, flatfoot=self.flatfoot) )
+            ) = (smpl_parser.get_mesh_offsets(zero_pose=zero_pose, v_template = v_template, betas=self.beta, flatfoot=self.flatfoot) )
 
             if self.rel_joint_lm:
                 if self.upright_start:
@@ -1414,8 +1414,8 @@ class SMPL_Robot:
             if self.upright_start:
                 zero_pose[0, :3] = torch.tensor(
                     [1.2091996, 1.2091996, 1.2091996])
-
-            verts, joints, skin_weights, joint_names, joint_offsets, parents_dict, channels, joint_range = smpl_parser.get_offsets(
+            
+            verts, joints, skin_weights, joint_names, joint_offsets, parents_dict, channels, joint_range = smpl_parser.get_offsets(v_template = v_template,
                 betas=self.beta, zero_pose=zero_pose)
 
             self.height = torch.max(verts[:, 1]) - torch.min(verts[:, 1])
@@ -1943,7 +1943,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     args = parser.parse_args()
     robot_cfg = {
-        "mesh": False,
+        "mesh": True,
         "rel_joint_lm": False,
         "upright_start": False,
         "remove_toe": False,
