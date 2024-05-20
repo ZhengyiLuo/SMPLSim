@@ -151,7 +151,7 @@ class SMPL_Parser(_SMPL):
         # joints = smpl_output.joints[:,JOINST_TO_USE]
         return vertices, joints
 
-    def get_offsets(self, zero_pose=None, betas=torch.zeros(1, 10).float()):
+    def get_offsets(self, v_template=None,   zero_pose=None, betas=torch.zeros(1, 10).float()):
         with torch.no_grad():
             if zero_pose is None:
                 verts, Jtr = self.get_joints_verts(self.zero_pose, th_betas=betas)
@@ -294,7 +294,7 @@ class SMPLH_Parser(_SMPLH):
         # joints = smpl_output.joints[:,JOINST_TO_USE]
         return vertices, joints
 
-    def get_offsets(self, zero_pose=None, betas=torch.zeros(1, 10), flatfoot=False):
+    def get_offsets(self, v_template=None,  zero_pose=None, betas=torch.zeros(1, 10), flatfoot=False):
        with torch.no_grad():
             joint_names = self.joint_names
             if zero_pose is None:
