@@ -1333,19 +1333,15 @@ class SMPL_Robot:
                 
             if self.upright_start:
                 zero_pose[0, :3] = torch.tensor([1.2091996, 1.2091996, 1.2091996])
-            (
-                verts,
-                joints,
-                skin_weights,
-                joint_names,
-                joint_offsets,
-                joint_parents,
-                joint_axes,
-                joint_dofs,
-                joint_range,
-                contype,
-                conaffinity,
-            ) = (smpl_parser.get_mesh_offsets(zero_pose=zero_pose, v_template = v_template, betas=self.beta, flatfoot=self.flatfoot) )
+
+            if self.smpl_model in ['smpl', 'smplh'] :
+                (verts, joints, skin_weights, joint_names, joint_offsets, joint_parents, joint_axes, joint_dofs,
+                 joint_range, contype, conaffinity) = smpl_parser.get_mesh_offsets(
+                    zero_pose=zero_pose, betas=self.beta, flatfoot=self.flatfoot)
+            else:
+                (verts, joints, skin_weights, joint_names, joint_offsets, joint_parents, joint_axes, joint_dofs,
+                 joint_range, contype, conaffinity) = smpl_parser.get_mesh_offsets(
+                    zero_pose=zero_pose, v_template=v_template, betas=self.beta, flatfoot=self.flatfoot)
 
             if self.rel_joint_lm:
                 if self.upright_start:
@@ -1414,9 +1410,13 @@ class SMPL_Robot:
             if self.upright_start:
                 zero_pose[0, :3] = torch.tensor(
                     [1.2091996, 1.2091996, 1.2091996])
-            
-            verts, joints, skin_weights, joint_names, joint_offsets, parents_dict, channels, joint_range = smpl_parser.get_offsets(v_template = v_template,
-                betas=self.beta, zero_pose=zero_pose)
+
+            if self.smpl_model in ['smpl', 'smplh']:
+                verts, joints, skin_weights, joint_names, joint_offsets, parents_dict, channels, joint_range = (
+                    smpl_parser.get_offsets(betas=self.beta, zero_pose=zero_pose))
+            else:
+                verts, joints, skin_weights, joint_names, joint_offsets, parents_dict, channels, joint_range = (
+                    smpl_parser.get_offsets(v_template=v_template, betas=self.beta, zero_pose=zero_pose))
 
             self.height = torch.max(verts[:, 1]) - torch.min(verts[:, 1])
             self.hull_dict = get_geom_dict(verts,
@@ -1959,12 +1959,11 @@ if __name__ == "__main__":
         "joint_params": {},
         "geom_params": {},
         "actuator_params": {},
-        "model": "smplx",
-        "ball_joint": False, 
+        "ball_joint": False,
         "create_vel_sensors": False, # Create global and local velocities sensors. 
         "sim": "isaacgym"
     }
-    smpl_robot = SMPL_Robot(robot_cfg)
+    smpl_robot = SMPL_Robot(robot_cfg, data_dir='../../smpl')
     params_names = smpl_robot.get_params(get_name=True)
 
     betas = torch.zeros(1, 16)
