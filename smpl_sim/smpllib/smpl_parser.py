@@ -420,8 +420,7 @@ class SMPLX_Parser(_SMPLX):
             B, beta_shape = th_betas.shape
             if beta_shape != 20:
                 th_betas = torch.cat([th_betas, torch.zeros((B, 20 - beta_shape)).to(th_betas)], dim = -1)
-
-        batch_size = pose.shape[0]
+        
         smpl_output = self.forward(
             body_pose=pose[:, 3:66],
             global_orient=pose[:, :3],
