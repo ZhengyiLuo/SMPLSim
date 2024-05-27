@@ -1964,7 +1964,7 @@ if __name__ == "__main__":
         "joint_params": {},
         "geom_params": {},
         "actuator_params": {},
-        "model": "smpl",
+        "model": "smplx",
         "ball_joint": False, 
         "create_vel_sensors": False, # Create global and local velocities sensors. 
         "sim": "isaacgym"
@@ -1974,7 +1974,7 @@ if __name__ == "__main__":
 
     betas = torch.zeros(1, 16)
     betas[0] = 2
-    gender = [1]
+    gender = [0]
     t0 = time.time()
     params = smpl_robot.get_params()
 
