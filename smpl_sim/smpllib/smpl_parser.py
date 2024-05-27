@@ -396,9 +396,7 @@ class SMPLX_Parser(_SMPLX):
         self.joint_range = {x: np.hstack([np.ones([3, 1]) * -np.pi, np.ones([3, 1]) * np.pi]) for x in self.joint_names}
         self.joint_range["L_Elbow"] *= 4
         self.joint_range["R_Elbow"] *= 4
-        # import ipdb
-        # ipdb.set_trace()
-
+        
         self.contype = {1: self.joint_names}
         self.conaffinity = {1: self.joint_names}
         self.zero_pose = torch.zeros(1, 156).float()

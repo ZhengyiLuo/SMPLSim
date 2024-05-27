@@ -25,7 +25,7 @@ dependencies = [
   'joblib',
   'numpy>1.16.1',
   'scipy',
-  'smplx@git+https://github.com/ZhengyiLuo/smplx.git@master',
+  'smplx[all]',
   'numpy-stl',
   'torchgeometry',
   'opencv-python',

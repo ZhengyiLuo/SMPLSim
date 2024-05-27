@@ -1220,24 +1220,30 @@ class SMPL_Robot:
                                               use_pca=False,
                                               create_transl=False)
         elif self.smpl_model == "smplx":
+            
             self.smpl_parser_n = SMPLX_Parser(
                 model_path=data_dir,
                 gender="neutral",
                 use_pca=False,
                 create_transl=False,
                 flat_hand_mean=True,
+                num_betas=20,
             )
+            
             self.smpl_parser_m = SMPLX_Parser(model_path=data_dir,
                                               gender="male",
                                               use_pca=False,
                                               create_transl=False, 
                                               flat_hand_mean=True,
+                                              num_betas=20,
                                               )
             self.smpl_parser_f = SMPLX_Parser(model_path=data_dir,
                                               gender="female",
                                               use_pca=False,
                                               create_transl=False, 
-                                              flat_hand_mean=True,)
+                                              flat_hand_mean=True,
+                                              num_betas=20,
+                                              )
 
         self.load_from_skeleton()
         self.joint_names = [b.name for b in self.bodies]
@@ -1943,7 +1949,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     args = parser.parse_args()
     robot_cfg = {
-        "mesh": True,
+        "mesh": False,
         "rel_joint_lm": False,
         "upright_start": False,
         "remove_toe": False,
@@ -1954,12 +1960,11 @@ if __name__ == "__main__":
         "big_ankle": True,
         "freeze_hand": False, 
         "box_body": True,
-        "model": "smpl",
         "body_params": {},
         "joint_params": {},
         "geom_params": {},
         "actuator_params": {},
-        "model": "smplx",
+        "model": "smpl",
         "ball_joint": False, 
         "create_vel_sensors": False, # Create global and local velocities sensors. 
         "sim": "isaacgym"
@@ -1968,8 +1973,8 @@ if __name__ == "__main__":
     params_names = smpl_robot.get_params(get_name=True)
 
     betas = torch.zeros(1, 16)
-    betas[0] = 1
-    gender = [0]
+    betas[0] = 2
+    gender = [1]
     t0 = time.time()
     params = smpl_robot.get_params()
 
