@@ -438,6 +438,7 @@ class SMPLX_Parser(_SMPLX):
     def get_offsets(self, v_template=None, zero_pose=None, betas=None, flatfoot=False):
         if not v_template is None:
             self.v_template = v_template
+        
         with torch.no_grad():
             joint_names = SMPLX_BONE_ORDER_NAMES
             if zero_pose is None:
