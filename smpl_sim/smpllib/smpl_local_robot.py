@@ -631,7 +631,7 @@ class Geom:
                                                   np.linalg.norm(vec))
 
     def sync_node(self):
-        self.node.attrib.pop("name", None)
+        # self.node.attrib.pop("name", None)
         if not self.size is None:
             self.node.attrib["size"] = " ".join(
                 [f"{x:.6f}".rstrip("0").rstrip(".") for x in self.size])
