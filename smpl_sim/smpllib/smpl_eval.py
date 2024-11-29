@@ -19,9 +19,44 @@ import argparse
 from smpl_sim.utils.transformation import euler_from_quaternion, quaternion_matrix
 from smpl_sim.utils.math_utils import *
 import copy
+from scipy.spatial.transform import Rotation as sRot
+
+def compute_metrics_obj(pred_pos_all, gt_pos_all, pred_rot_all, gt_rot_all, root_idx = 0, use_tqdm = True, concatenate = True):
+    # Rotation expect xyzw
+    metrics = defaultdict(list)
+    if use_tqdm:
+        pbar = tqdm(range(len(pred_pos_all)))
+    else:
+        pbar = range(len(pred_pos_all))
+        
+    assert(len(pred_pos_all) == len(pred_rot_all))
+        
+    for idx in pbar:
+        jpos_pred = pred_pos_all[idx].copy()
+        jpos_gt = gt_pos_all[idx].copy()
+        rot_pred = pred_rot_all[idx].copy()
+        rot_gt = gt_rot_all[idx].copy()
+        mpjpe_g = np.linalg.norm(jpos_gt - jpos_pred, axis=2)  * 1000
+
+        vel_dist = (compute_error_vel(jpos_pred, jpos_gt)) * 1000
+        accel_dist = (compute_error_accel(jpos_pred, jpos_gt)) * 1000
+
+        jpos_pred = jpos_pred - jpos_pred[:, [root_idx]]  # zero out root
+        jpos_gt = jpos_gt - jpos_gt[:, [root_idx]]
+        rot_error = np.linalg.norm((sRot.from_quat(rot_gt.reshape(-1, 4)) * sRot.from_quat(rot_pred.reshape(-1, 4)).inv()).as_rotvec(), axis = -1)
+        metrics["TTR"].append(mpjpe_g < 120)
+        metrics["mpjpe_g"].append(mpjpe_g)
+        metrics["rot_error"].append(rot_error)
+        metrics["accel_dist"].append(accel_dist)
+        metrics["vel_dist"].append(vel_dist)
+    if concatenate:
+        metrics = {k:np.concatenate(v) for k, v in metrics.items()}
+    return metrics
 
 
-def compute_metrics_lite(pred_pos_all, gt_pos_all, root_idx = 0, use_tqdm = True, concatenate = True):
+
+def compute_metrics_lite(pred_pos_all, gt_pos_all, pred_rot_all=None, gt_rot_all=None, root_idx = 0, use_tqdm = True, concatenate = True):
+    # Rotation expect xyzw
     metrics = defaultdict(list)
     if use_tqdm:
         pbar = tqdm(range(len(pred_pos_all)))
@@ -31,6 +66,8 @@ def compute_metrics_lite(pred_pos_all, gt_pos_all, root_idx = 0, use_tqdm = True
     for idx in pbar:
         jpos_pred = pred_pos_all[idx].copy()
         jpos_gt = gt_pos_all[idx].copy()
+        rot_pred = pred_rot_all[idx].copy() if pred_rot_all is not None else None
+        rot_gt = gt_rot_all[idx].copy() if gt_rot_all is not None else None
         mpjpe_g = np.linalg.norm(jpos_gt - jpos_pred, axis=2)  * 1000
         
 
@@ -42,8 +79,12 @@ def compute_metrics_lite(pred_pos_all, gt_pos_all, root_idx = 0, use_tqdm = True
 
         pa_mpjpe = p_mpjpe(jpos_pred, jpos_gt) * 1000
         mpjpe = np.linalg.norm(jpos_pred - jpos_gt, axis=2)* 1000
+        if rot_pred is not None and rot_gt is not None:
+            rot_error = np.linalg.norm((sRot.from_quat(rot_gt.reshape(-1, 4)) * sRot.from_quat(rot_pred.reshape(-1, 4)).inv()).as_rotvec(), axis = -1)
         
         metrics["mpjpe_g"].append(mpjpe_g)
+        if rot_pred is not None and rot_gt is not None:
+            metrics["rot_error"].append(rot_error)
         metrics["mpjpe_l"].append(mpjpe)
         metrics["mpjpe_pa"].append(pa_mpjpe)
         metrics["accel_dist"].append(accel_dist)
@@ -51,6 +92,7 @@ def compute_metrics_lite(pred_pos_all, gt_pos_all, root_idx = 0, use_tqdm = True
     if concatenate:
         metrics = {k:np.concatenate(v) for k, v in metrics.items()}
     return metrics
+
 
 
 def p_mpjpe(predicted, target):
