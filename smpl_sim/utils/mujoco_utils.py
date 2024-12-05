@@ -2,6 +2,7 @@ import numpy as np
 import mujoco
 from scipy.spatial.transform import Rotation as sRot
 
+
 def get_body_qposaddr(model):
     # adapted to mujoco 2.3+
     body_qposaddr = dict()
@@ -23,6 +24,7 @@ def get_body_qposaddr(model):
         body_qposaddr[body_name] = (start_qposaddr, end_qposaddr)
     return body_qposaddr
 
+
 def get_body_qveladdr(model):
     # adapted to mujoco 2.3+
     body_qveladdr = dict()
@@ -42,6 +44,7 @@ def get_body_qveladdr(model):
         body_qveladdr[body_name] = (start_qveladdr, end_qveladdr)
     return body_qveladdr
 
+
 def get_jnt_range(model):
     jnt_range = dict()
     for i in range(model.njnt):
@@ -52,6 +55,7 @@ def get_jnt_range(model):
         name = model.names[model.name_jntadr[i]:end_p].decode("utf-8").rstrip('\x00')
         jnt_range[name] = model.jnt_range[i]
     return jnt_range
+
 
 def get_actuator_names(model):
     actuators = []
@@ -76,25 +80,23 @@ def add_visual_capsule(scene, point1, point2, radius, rgba):
     if scene.ngeom >= scene.maxgeom:
         return
     scene.ngeom += 1  # increment ngeom
-    # initialise a new capsule, add it to the scene using mjv_makeConnector
+    # initialise a new capsule, add it to the scene using mjv_connector
     mujoco.mjv_initGeom(scene.geoms[scene.ngeom-1],
                         mujoco.mjtGeom.mjGEOM_CAPSULE, np.zeros(3),
                         np.zeros(3), np.zeros(9), rgba.astype(np.float32))
-    mujoco.mjv_makeConnector(scene.geoms[scene.ngeom-1],
+    mujoco.mjv_connector(scene.geoms[scene.ngeom-1],
                             mujoco.mjtGeom.mjGEOM_CAPSULE, radius,
-                            point1[0], point1[1], point1[2],
-                            point2[0], point2[1], point2[2])
+                            point1, point2)
 
 def add_visual_rbox(scene, point1, point2, rgba):
     """Adds one rectangle to an mjvScene."""
     if scene.ngeom >= scene.maxgeom:
         return
     scene.ngeom += 1  # increment ngeom
-    # initialise a new capsule, add it to the scene using mjv_makeConnector
+    # initialise a new capsule, add it to the scene using mjv_connector
     mujoco.mjv_initGeom(scene.geoms[scene.ngeom-1],
                         mujoco.mjtGeom.mjGEOM_BOX, np.zeros(3),
                         np.zeros(3), np.zeros(9), rgba.astype(np.float32))
-    mujoco.mjv_makeConnector(scene.geoms[scene.ngeom-1],
+    mujoco.mjv_connector(scene.geoms[scene.ngeom-1],
                             mujoco.mjtGeom.mjGEOM_BOX, 0.01,
-                            point1[0], point1[1], point1[2],
-                            point2[0], point2[1], point2[2])
+                            point1, point2)
