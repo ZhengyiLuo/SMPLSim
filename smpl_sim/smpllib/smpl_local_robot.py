@@ -1244,6 +1244,8 @@ class SMPL_Robot:
                                               flat_hand_mean=True,
                                               num_betas=20,
                                               )
+        elif self.smpl_model == "mano":
+            raise NotImplementedError("mano SMPL_Robot not implemented yet")
 
         self.load_from_skeleton()
         self.joint_names = [b.name for b in self.bodies]
@@ -1330,11 +1332,11 @@ class SMPL_Robot:
             self.model_dirs.append(f"/tmp/smpl/{uuid.uuid4()}")
 
             self.skeleton = SkeletonMesh(self.model_dirs[-1])
-            if self.smpl_model in  ["smpl"]:
+            if self.smpl_model == "smpl":
                 zero_pose = torch.zeros((1, 72))
-            elif self.smpl_model in  ["smpl", "smplh", "smplx"]:
+            elif self.smpl_model in ["smplh", "smplx"]:
                 zero_pose = torch.zeros((1, 156))
-            elif self.smpl_model in  ["mano"]:
+            elif self.smpl_model == "mano":
                 zero_pose = torch.zeros((1, 48))
                 
             if self.upright_start:
@@ -1351,7 +1353,11 @@ class SMPL_Robot:
                 joint_range,
                 contype,
                 conaffinity,
-            ) = (smpl_parser.get_mesh_offsets(zero_pose=zero_pose, v_template = v_template, betas=self.beta, flatfoot=self.flatfoot) )
+            ) = (
+                smpl_parser.get_mesh_offsets(zero_pose=zero_pose, v_template=v_template, betas=self.beta, flatfoot=self.flatfoot)
+                if self.smpl_model == "smplx" else
+                smpl_parser.get_mesh_offsets(zero_pose=zero_pose, betas=self.beta, flatfoot=self.flatfoot)
+            )
 
             if self.rel_joint_lm:
                 if self.upright_start:
