@@ -15,7 +15,7 @@ import torch
 
 from ..core import *
 from .backend.fbx.fbx_read_wrapper import fbx_to_array
-import scipy.ndimage.filters as filters
+import scipy.ndimage as filters
 
 
 class SkeletonTree(Serializable):

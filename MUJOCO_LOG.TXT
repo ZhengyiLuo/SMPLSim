@@ -22,3 +22,15 @@ ERROR: could not initialize GLFW
 Mon May 27 18:49:02 2024
 ERROR: could not initialize GLFW
 
+Wed Oct 23 17:07:26 2024
+ERROR: could not initialize GLFW
+
+Wed Oct 23 17:07:32 2024
+ERROR: could not create window
+
+Wed Oct 23 17:08:00 2024
+ERROR: could not initialize GLFW
+
+Wed Oct 23 17:08:06 2024
+ERROR: could not create window
+
