@@ -1973,7 +1973,6 @@ if __name__ == "__main__":
     params_names = smpl_robot.get_params(get_name=True)
 
     betas = torch.zeros(1, 16)
-    # betas[0] = 2
     gender = [0]
     t0 = time.time()
     params = smpl_robot.get_params()
