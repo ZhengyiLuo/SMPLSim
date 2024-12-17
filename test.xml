@@ -1,3 +1,4 @@
+
 <mujoco model="humanoid">
   <compiler coordinate="local"/>
   <default>
@@ -495,3 +496,5 @@
   <sensor/>
   <size njmax="700" nconmax="700"/>
 </mujoco>
+
+
