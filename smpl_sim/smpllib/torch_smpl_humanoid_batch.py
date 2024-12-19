@@ -126,7 +126,7 @@ class Humanoid_Batch:
         else:
             pose_mat = pose
             
-        if pose_mat.shape != 5:
+        if len(pose_mat.shape) != 5:
             pose_mat = pose_mat.reshape(B, T, -1, 3, 3)
 
         if count_offset:
@@ -157,8 +157,8 @@ class Humanoid_Batch:
             # joblib.dump(dof_pos.squeeze(), "dof.pkl")
             
             dof_vel = ((return_dict.dof_pos[:, 1:] - return_dict.dof_pos[:, :-1] )/self.dt)
-            while len(dof_vel[dof_vel > np.pi]) > 0: dof_vel[dof_vel > np.pi] -= 2 * np.pi
-            while len(dof_vel[dof_vel < -np.pi]) > 0: dof_vel[dof_vel < -np.pi] += 2 * np.pi
+            # while len(dof_vel[dof_vel > np.pi]) > 0: dof_vel[dof_vel > np.pi] -= 2 * np.pi
+            # while len(dof_vel[dof_vel < -np.pi]) > 0: dof_vel[dof_vel < -np.pi] += 2 * np.pi
             return_dict.dof_vels = torch.cat([dof_vel, dof_vel[:, -1:]], dim = 1)
             return_dict.fps = int(1/self.dt)
             
@@ -206,7 +206,7 @@ class Humanoid_Batch:
         assert(len(p.shape) == 4)
         
         velocity = (p[:, 1:, ...] - p[:, :-1, ...])/time_delta
-        velocity = torch.cat([velocity[:, :1, ...], velocity], dim = 1) # Mujoco 
+        velocity = torch.cat([velocity, velocity[:, -1:, ...]], dim = 1) # Mujoco
         
         if guassian_filter:
             velocity = torch.from_numpy(ndimage.gaussian_filter1d(velocity, 2, axis=-3, mode="nearest")).to(p)
@@ -219,8 +219,7 @@ class Humanoid_Batch:
         
         diff_quat_data = tRot.quat_identity_like(rotations).to(rotations)
         
-        diff_quat_data[..., 1:, :, :] = tRot.quat_mul_norm(rotations[..., 1:, :, :], tRot.quat_inverse(rotations[..., :-1, :, :]))
-        diff_quat_data[..., 0, :, :] = diff_quat_data[..., 1, :, :]
+        diff_quat_data[..., :-1, :, :] = tRot.quat_mul_norm(rotations[..., 1:, :, :], tRot.quat_inverse(rotations[..., :-1, :, :]))
         diff_angle, diff_axis = tRot.quat_angle_axis(diff_quat_data)
         angular_velocity = diff_axis * diff_angle.unsqueeze(-1) / time_delta
         

@@ -12,7 +12,7 @@ opencv-python==4.6.0.66
 tqdm 
 pyyaml
 wandb
-mujoco
+mujoco>=2.3.7
 scikit-image
 gym
 git+https://github.com/ZhengyiLuo/smplx.git@master
