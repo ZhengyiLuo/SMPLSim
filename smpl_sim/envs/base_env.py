@@ -72,6 +72,11 @@ class BaseEnv(gym.Env):
 
         observation = self.compute_observations()
         info = self.compute_info()
+        
+        if self.cfg.env.get("critic_obs", False):
+            info['critic_state'] = self.get_critic_obs()
+        else:
+            info['critic_state'] = observation
 
         if self.render_mode == "human":
             self.render()

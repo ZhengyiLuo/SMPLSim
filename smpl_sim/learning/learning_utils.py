@@ -194,9 +194,10 @@ def get_optimizer(net, lr, weight_decay, optimizer_type = "adam",  **kwargs):
         raise ValueError("Unknown optimizer type: {}".format(optimizer_type))
 
 
-def estimate_advantages(rewards, masks, values, gamma, tau):
+
+def estimate_advantages(rewards, not_done, not_dead, values, gamma, tau):
     device = rewards.device
-    rewards, masks, values = batch_to(torch.device('cpu'), rewards, masks, values)
+    rewards, not_done, not_dead, values = batch_to(torch.device('cpu'), rewards, not_done, not_dead, values)
     tensor_type = type(rewards)
     deltas = tensor_type(rewards.size(0), 1)
     advantages = tensor_type(rewards.size(0), 1)
@@ -204,8 +205,8 @@ def estimate_advantages(rewards, masks, values, gamma, tau):
     prev_value = 0
     prev_advantage = 0
     for i in reversed(range(rewards.size(0))):
-        deltas[i] = rewards[i] + gamma * prev_value * masks[i] - values[i]
-        advantages[i] = deltas[i] + gamma * tau * prev_advantage * masks[i]
+        deltas[i] = rewards[i] + gamma * prev_value * not_dead[i] - values[i] 
+        advantages[i] = deltas[i] + gamma * tau * prev_advantage * not_done[i] 
 
         prev_value = values[i, 0]
         prev_advantage = advantages[i, 0]
