@@ -19,7 +19,6 @@ git+https://github.com/ZhengyiLuo/smplx.git@master
 lxml
 autograd
 scikit-learn
-chumpy
 patchelf
 wandb
 pyvirtualdisplay
