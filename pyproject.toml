@@ -29,7 +29,6 @@ dependencies = [
   'numpy-stl',
   'torchgeometry',
   'opencv-python',
-  'chumpy',
   'imageio',
   'gymnasium>=0.29.1',
   'hydra-core>=1.3',
