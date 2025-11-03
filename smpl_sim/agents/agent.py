@@ -70,21 +70,28 @@ class Agent:
 
         while logger.num_steps < min_batch_size:
             
-            obs_dict, info = self.env.reset()
-            state = self.preprocess_obs(obs_dict) # let's assume that the environment always return a np.ndarray (see https://gymnasium.farama.org/api/wrappers/observation_wrappers/#gymnasium.wrappers.FlattenObservation)
+            obs, info = self.env.reset()
+            critic_state = self.preprocess_obs(info['critic_state'])
+            state = self.preprocess_obs(obs) # let's assume that the environment always return a np.ndarray (see https://gymnasium.farama.org/api/wrappers/observation_wrappers/#gymnasium.wrappers.FlattenObservation)
             logger.start_episode(self.env)
 
             for t in range(10000):
                 mean_action = self.mean_action or self.env.np_random.binomial(1, 1 - self.noise_rate)
                 actions = self.policy_net.select_action(torch.from_numpy(state).to(self.dtype), mean_action)[0].numpy()
-                next_obs, reward, terminated, truncated, info = self.env.step(self.preprocess_actions(actions)) # action processing should not affect the recorded action
-                done = terminated or truncated
+                next_obs, reward, died, timed_out, info = self.env.step(self.preprocess_actions(actions)) # action processing should not affect the recorded action
+                done = died or timed_out
                 next_state = self.preprocess_obs(next_obs)
                 logger.step(self.env, reward, info)
+                
 
-                mask = 0 if done else 1
+                not_done = 0 if done else 1
+                not_dead = 0 if died else 1 
+                
                 exp = 1 - mean_action
-                self.push_memory(memory, state.squeeze(), actions, mask, next_state.squeeze(), reward, exp)
+                ### squeeze to make sure that the critic state is a 1D array. Important. 
+                self.push_memory(memory, state.squeeze(), critic_state.squeeze(), actions, not_done, not_dead, next_state.squeeze(), reward, exp)
+                
+                critic_state = self.preprocess_obs(info['critic_state'])
 
                 if pid == 0 and not self.headless:
                     self.env.render()
@@ -104,8 +111,8 @@ class Agent:
     def pre_episode(self):
         return
 
-    def push_memory(self, memory, state, action, mask, next_state, reward, exp):
-        memory.push(state, action, mask, next_state, reward, exp)
+    def push_memory(self, memory, state, critic_state, action, not_done, not_dead, next_state, reward, exp):
+        memory.push(state, critic_state, action, not_done, not_dead, next_state, reward, exp)
 
     def pre_sample(self):
         # Function to be called before sampling, unique to each thread.
@@ -141,7 +148,7 @@ class Agent:
         if self.clip_obs:
             return np.clip(obs.reshape(1, -1), self.obs_low, self.obs_high) 
         else:
-            return obs.reshape(-1, 1)
+            return obs.reshape(1, -1)
 
     def preprocess_actions(self, actions):
         actions = int(actions) if self.policy_net.type == 'discrete' else actions.astype(self.np_dtype)

@@ -29,7 +29,7 @@ except ImportError:
     from importlib.resources import files
     
     
-_AVAILABLE_CONTROLLERS = ["uhc_pd", "simple_pid", "pd", "torque"]
+_AVAILABLE_CONTROLLERS = ["uhc_pd", "simple_pid", "pd", "torque", "default"]
 
 
 GAINS = {}
@@ -319,6 +319,8 @@ class HumanoidEnv(BaseEnv):
             self.ctrler = ctrls.SimplePID(self.jkp/10, np.ones_like(self.jkp), self.jkd/10, self.mj_model.opt.timestep*self.control_freq_inv,self.torque_lim, self._pd_action_scale, self._pd_action_offset)
         elif self.control_mode == "torque":
             self.ctrler = ctrls.SimpleTorqueController(self.power_scale*self.torque_lim, self.torque_lim)
+        elif self.control_mode == "default":
+            pass
         
     def build_pd_action_scale(self):
         lim_high = np.zeros(self.dof_size)
@@ -404,8 +406,10 @@ class HumanoidEnv(BaseEnv):
     
     def compute_torque(self, ctrl):
         ctrl_joint = ctrl[:self.dof_size]
-        # ctrl_joint[:] = 0; # ctrl_joint[self.actuator_names.index("L_Ankle_x")] = 1/2 # Debugging
-        torque = self.ctrler.control(ctrl_joint, self.mj_model, self.mj_data)
+        if self.control_mode == "default":
+            return ctrl_joint
+        else:
+            torque = self.ctrler.control(ctrl_joint, self.mj_model, self.mj_data)
         
         # np.set_printoptions(precision=4, suppress=1)
         # print(torque, torque.max(), torque.min())
@@ -425,10 +429,9 @@ class HumanoidEnv(BaseEnv):
         return reward
 
     def compute_reset(self):
-        if self.cur_t > self.max_episode_length:
-            return False, True
-        else:
-            return False, False
+        timed_out = self.cur_t > self.max_episode_length
+        died = False
+        return died, timed_out
 
     def pre_physics_step(self, actions):
         pass
@@ -440,14 +443,13 @@ class HumanoidEnv(BaseEnv):
         self.curr_power_usage = []
         for i in range(self.control_freq_inv):
             if not self.paused:
-                torque = self.compute_torque(actions)
+                control = self.compute_torque(actions)
                 # np.set_printoptions(precision=4, suppress=1); print( np.abs(torque).max(), np.abs(torque).min())
-                self.mj_data.ctrl[:] = torque
+                self.mj_data.ctrl[:] = control
+                joint_torque = self.mj_data.qfrc_actuator[6:]
                 mujoco.mj_step(self.mj_model, self.mj_data)
-                self.curr_power_usage.append(np.abs(torque * self.get_qvel()[6:]))
+                self.curr_power_usage.append(np.abs(joint_torque * self.get_qvel()[6:]))
                 
-                # self.mj_data.qpos[2] = 1.5
-                # mujoco.mj_forward(self.mj_model, self.mj_data)
         return
 
     def post_physics_step(self, actions):
@@ -455,12 +457,16 @@ class HumanoidEnv(BaseEnv):
             self.cur_t += 1
         obs = self.compute_observations()
         reward = self.compute_reward(actions)
-        terminated, truncated = self.compute_reset()
+        died, timed_out = self.compute_reset()
         if self.disable_reset:
-            terminated, truncated = False, False
+            died, timed_out = False, False
         info = {}
         info.update(self.reward_info)
-        return obs, reward, terminated, truncated, info
+        if self.cfg.env.get("critic_obs", False):
+            info['critic_state'] = self.get_critic_obs()
+        else:
+            info['critic_state'] = obs
+        return obs, reward, died, timed_out, info
     
     def init_humanoid(self):
         if self.state_init == HumanoidEnv.StateInit.Default:
@@ -535,7 +541,7 @@ class HumanoidEnv(BaseEnv):
     
     # Getting the body angular velocity in the world frame using sensors. This is required for self_obs_v2. This function expect sensors to be first linear then angular. 
     def get_body_angular_vel(self):
-        return self.mj_data.sensordata[self.num_vel_limit:].reshape(self.num_rigid_bodies, 3).copy()
+        return self.mj_data.sensordata[self.num_vel_limit:(self.num_vel_limit * 2)].reshape(self.num_rigid_bodies, 3).copy()
     
         
     def get_qpos(self):
