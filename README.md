@@ -14,6 +14,18 @@ This repo supports creating the xml files for SMPL/SMPLH/SMPLX compatible humano
 
 ### Commands:
 
+
+Eval Humanoid:
+
+```
+python smpl_sim/smpllib/smpl_local_robot.py 
+python examples/env_humanoid_test.py headless=False
+```
+
+
+Training:
+
+
 ```
 python examples/env_humanoid_test.py headless=False
 python smpl_sim/run.py env=speed exp_name=speed env.self_obs_v=2  robot.create_vel_sensors=True
